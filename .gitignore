@@ -15,6 +15,7 @@ internal/infra/api/gen/
 .idea/
 .vscode/
 .claude/
+docs/
 
 # Test
 coverage.out
