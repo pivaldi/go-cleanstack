@@ -1,0 +1,23 @@
+# Binaries
+/bin/
+*.exe
+
+# Environment
+.envrc
+config_default.toml
+config_staging.toml
+config_production.toml
+
+# Generated
+internal/infra/api/gen/
+
+# IDE
+.idea/
+.vscode/
+.claude/
+
+# Test
+coverage.out
+
+# Go
+vendor/

@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+bold=$(tput smso)
+resetColor="$(tput sgr0)"
+red="$(
+    tput bold
+    tput setaf 1
+)"
+green="$(
+    tput bold
+    tput setaf 2
+)"
+yellow="$(
+    tput bold
+    tput setaf 3
+)"
+blue="$(
+    tput bold
+    tput setaf 4
+)"
+
+APP_ROOT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+DOING_MSG=
+
+function _doing() {
+    DOING_MSG=$1
+
+    echo "${blue}⇾ Doing « ${DOING_MSG} »…$resetColor"
+}
+
+function _done() {
+    local DONE="${1:-DONE}"
+
+    [ -z "$1" ] || DONE="$1"
+
+    echo
+    echo "${green} ${resetColor} ${DOING_MSG} : ${green}$DONE${resetColor}"
+    echo
+}
+
+function _doneNTD() {
+    _done 'Nothing to do…'
+}
+
+function _warn() {
+    echo
+    echo "${yellow}⚠${resetColor} ${DOING_MSG} : ${bold}${yellow}$1${resetColor}${resetBold}"
+    echo
+}
+
+function _fail() {
+    echo "$bold${red} PROCESS ABORTED$resetColor$resetBold"
+    echo
+
+    exit 1
+}
+
+function _do() {
+    # https://unix.stackexchange.com/questions/148109/shifting-command-output-to-the-right
+    echo "Executing command '$1'"
+
+    $1 || _fail | nl -bn
+}
+
+_doing 'Installing https://just.systems/man/en/'
+type just &>/dev/null && _doneNTD || {
+    _do "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"
+    _done
+}
+
+function configAppEnv() {
+    local env_name
+    local env_choice
+
+    grep -q 'CONFIG_APP_ENV' "${APP_ROOT_PATH}/.envrc" && {
+        echo -e "\t${yellow}[Configuration des variables applicatives]${resetColor}\n"
+        echo -e "\t${yellow}1${resetColor} : development\n"
+        echo -e "\t${yellow}2${resetColor} : formation\n"
+        echo -e "\t${yellow}3${resetColor} : staging\n"
+        echo -e "\t${yellow}4${resetColor} : production\n"
+        echo -e "Enter your choice: \c"
+        read env_choice
+
+        while [ -z "$env_choice" ] || [ "$env_choice" != "1" -a "$env_choice" != "2" -a "$env_choice" != '3' -a "$env_choice" != '4' ]; do
+            tput el
+            echo -e "Unsupported choice, enter your choice : \c"
+            read env_choice
+
+        done
+
+        case $env_choice in
+        1)
+            env_name="development"
+            ;;
+        3)
+            env_name="staging"
+            ;;
+        4)
+            env_name="production"
+            ;;
+        esac
+
+        sed -i "s/CONFIG_APP_ENV/${env_name}/g" "${APP_ROOT_PATH}/.set-deployment-env.rc"
+
+        _done
+    } || _doneNTD
+
+    [ -z "$env_name" ] || export APP_ENV=$env_name
+}
+
+_doing 'Configuration of APP_ENV'
+[ -e "${APP_ROOT_PATH}/.envrc" ] && _doneNTD || {
+    cp "${APP_ROOT_PATH}/.envrc.example" "${APP_ROOT_PATH}/.envrc"
+    configAppEnv
+}
+
+. ./.envrc || exit 1
+
+_doing 'Installing/Updating Development Tools'
+[ "$APP_ENV" == 'development' ] && _do 'just install-dev' || _doneNTD
+
+_doing 'Installing binary dependencies'
+_do 'just install-prod'
+
+direnv allow

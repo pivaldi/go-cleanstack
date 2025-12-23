@@ -1,0 +1,10 @@
+## Configuration file for development environment (APP_ENV.
+## Override default the values of config_default.toml
+## This file is used for development purposes only.
+## It should not be committed to version control.
+
+[server]
+port = 8085
+
+[database]
+url = "postgres://otherUser:otherPass@localhost:5432/cleanstack_development?sslmode=disable"
