@@ -18,7 +18,7 @@ func SetupTestDB(databaseURL string) (*sqlx.DB, error) {
 
 	// Run migrations
 	m, err := migrate.New(
-		"file://../../internal/infra/persistence/migrations",
+		"file://../../migrations",
 		databaseURL,
 	)
 	if err != nil {

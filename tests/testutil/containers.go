@@ -18,7 +18,7 @@ type PostgresContainer struct {
 
 func StartPostgresContainer(ctx context.Context) (*PostgresContainer, error) {
 	req := testcontainers.ContainerRequest{
-		Image:        "postgres:16-alpine",
+		Image:        "postgres:latest",
 		ExposedPorts: []string{"5432/tcp"},
 		Env: map[string]string{
 			"POSTGRES_USER":     "test",

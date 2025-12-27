@@ -7,7 +7,7 @@
 port = 4225
 
 [database]
-url = "postgres://user:pass@localhost:5432/cleanstack_staging?sslmode=require"
+url = "postgres://user:pass@cleanstack-db-staging:5432/cleanstack_staging?sslmode=require"
 
 [log]
 level = "info"

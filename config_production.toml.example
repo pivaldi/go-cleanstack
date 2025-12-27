@@ -4,7 +4,7 @@
 ## It should not be committed to version control.
 
 [database]
-url = "postgres://user:pass@prod-db:5432/cleanstack_production?sslmode=require"
+url = "postgres://user:pass@cleanstack-db-production:5432/cleanstack_production?sslmode=require"
 
 [log]
 level = "warn"

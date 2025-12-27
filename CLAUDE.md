@@ -48,9 +48,81 @@ just generate-api     # Regenerate Connect RPC code from protobuf
 ### Build & Docker
 ```bash
 just build            # Build binary to bin/cleanstack
-just up               # Start docker-compose (database)
+just up               # Start docker-compose for current APP_ENV (reads from .envrc)
 just down             # Stop docker-compose
+just logs             # View logs from all running services
 ```
+
+**Port allocation** (set automatically by APP_ENV):
+- development: App runs locally on 4224, DB in Docker on 5435
+- staging: Full stack in Docker - App 4225, DB 5436
+- production: Full stack in Docker - App 4226, DB 5437
+
+## Multi-Environment Workflow
+
+This project uses `APP_ENV` to drive configuration across all tools (config files, docker-compose, justfile).
+
+### Architecture
+- **Development**: Hybrid - App runs locally (`just dev`), database in Docker
+  - Allows hot reload and debugging
+  - Database URL: `localhost:5435`
+- **Staging/Production**: Full stack in Docker
+  - Both app and database run in containers
+  - Database URL: Docker network using container name
+
+### Setup for Multiple Environments
+1. Clone/checkout repo to separate directories for each environment:
+```bash
+# Example directory structure
+~/projects/cleanstack-development/
+~/projects/cleanstack-staging/
+~/projects/cleanstack-production/
+```
+
+2. In each directory, run `./configure` and select the appropriate environment
+3. This creates `.envrc` with `export APP_ENV=<environment>` and `config_<environment>.toml`
+
+### Usage
+```bash
+# Development workflow
+source .envrc          # Load APP_ENV=development
+just up                # Start database in Docker on port 5435
+just dev               # Run app locally on port 4224
+
+# Staging/Production workflow
+source .envrc          # Load APP_ENV=staging or production
+just up                # Start both app + database in Docker
+```
+
+### How APP_ENV Works
+- **`.envrc`**: Sets APP_ENV environment variable
+- **`config.go`**: Loads `config_default.toml` + `config_${APP_ENV}.toml`
+- **`docker-compose.yml`**: Uses `${APP_ENV}` for service names, ports, database names
+- **`justfile`**: Validates APP_ENV and sets ports before starting docker-compose
+- **`./configure`**: Creates environment-specific config files from `.example` templates
+
+### Database Access
+```bash
+# Each environment on different port
+psql -h localhost -p 5435 -U user -d cleanstack_development  # Development
+psql -h localhost -p 5436 -U user -d cleanstack_staging      # Staging
+psql -h localhost -p 5437 -U user -d cleanstack_production   # Production
+```
+
+### Running Multiple Environments Simultaneously
+Since each environment is in its own directory with its own `APP_ENV`, you can run all three at once without conflicts:
+```bash
+# Terminal 1: Development
+cd ~/projects/cleanstack-development && source .envrc && just up && just dev
+
+# Terminal 2: Staging
+cd ~/projects/cleanstack-staging && source .envrc && just up
+
+# Terminal 3: Production
+cd ~/projects/cleanstack-production && source .envrc && just up
+```
+
+Each environment runs on its own ports (4224/5435, 4225/5436, 4226/5437) without conflicts.
 
 ## Architecture: Hexagonal (Ports & Adapters)
 

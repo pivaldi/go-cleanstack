@@ -38,13 +38,17 @@ test-cover:
     go tool cover -html=coverage.out -o coverage.html
 
 [doc('Migrations')]
-[group('migrate')]
+[group('database')]
 migrate-up:
     go run ./main.go migrate up
 
-[group('migrate')]
+[group('database')]
 migrate-down:
     go run ./main.go migrate down
+
+[group('database')]
+db-connect:
+    docker exec -it cleanstack-db-${APP_ENV} psql -U user -d cleanstack_${APP_ENV}
 
 [doc('Linting')]
 [group('lint')]
@@ -59,8 +63,38 @@ lint-fix:
 build:
     go build -o bin/cleanstack ./main.go
 
+[doc('Start docker-compose for current APP_ENV')]
 [group('docker')]
 up:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ -z "${APP_ENV:-}" ]; then
+        echo "Error: APP_ENV is not set. Run './configure' first or 'source .envrc'"
+        exit 1
+    fi
+
+    # Set ports based on APP_ENV
+    case "$APP_ENV" in
+        development)
+            export APP_PORT=4224
+            export DB_PORT=5435
+            ;;
+        staging)
+            export APP_PORT=4225
+            export DB_PORT=5436
+            ;;
+        production)
+            export APP_PORT=4226
+            export DB_PORT=5437
+            ;;
+        *)
+            echo "Error: APP_ENV must be one of: development, staging, production"
+            exit 1
+            ;;
+    esac
+
+    echo "Starting docker-compose for APP_ENV=$APP_ENV (app:$APP_PORT, db:$DB_PORT)"
     docker-compose up -d
 
 [group('docker')]

@@ -1,12 +1,15 @@
-# docker-compose.yml
+# docker-compose.yml - APP_ENV-driven configuration
+# This file uses the APP_ENV environment variable to dynamically configure services
+# Usage: Set APP_ENV (via .envrc) then run: just up
+
 services:
   app:
+    container_name: cleanstack-app-${APP_ENV}
     build: .
-    environment:
-      APP_ENV: 'development'
-      PORT: 4224
     ports:
-      - ${PORT:-4224}:${PORT:-4224}
+      - '${APP_PORT}:4224'
+    environment:
+      - APP_ENV=${APP_ENV}
     depends_on:
       db:
         condition: service_healthy
@@ -15,14 +18,14 @@ services:
       - ./config_${APP_ENV}.toml:/config_${APP_ENV}.toml:ro
 
   db:
-    image: postgres:16-alpine
+    container_name: cleanstack-db-${APP_ENV}
+    image: postgres:latest
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: cleanstack_${APP_ENV}
-      POSTGRES_EXPORTED_PORT: 5430
     ports:
-      - '5432:${POSTGRES_EXPORTED_PORT:-5430}'
+      - '127.0.0.1:${DB_PORT}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
