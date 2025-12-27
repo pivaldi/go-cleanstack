@@ -24,6 +24,7 @@ repos:
         entry: golangci-lint run --fix
         types: [go]
         language: golang
+        files: '\.go$'
         require_serial: true
         pass_filenames: false
 
