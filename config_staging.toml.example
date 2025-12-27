@@ -4,7 +4,7 @@
 ## It should not be committed to version control.
 
 [server]
-port = 4210
+port = 4225
 
 [database]
 url = "postgres://user:pass@localhost:5432/cleanstack_staging?sslmode=require"

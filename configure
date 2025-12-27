@@ -1,129 +1,205 @@
 #!/usr/bin/env bash
 
-set -e
+set -eu
 set -o pipefail
 
 bold=$(tput smso)
 resetColor="$(tput sgr0)"
+resetBold="$(tput rmso)"
 red="$(
-    tput bold
-    tput setaf 1
+  tput bold
+  tput setaf 1
 )"
 green="$(
-    tput bold
-    tput setaf 2
+  tput bold
+  tput setaf 2
 )"
 yellow="$(
-    tput bold
-    tput setaf 3
+  tput bold
+  tput setaf 3
 )"
 blue="$(
-    tput bold
-    tput setaf 4
+  tput bold
+  tput setaf 4
 )"
 
 APP_ROOT_PATH=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+IN_DOCKER=false
+
+if grep -q docker /proc/1/cgroup; then
+  IN_DOCKER=true
+fi
+
+$IN_DOCKER && exit 0
 
 DOING_MSG=
 
 function _doing() {
-    DOING_MSG=$1
+  DOING_MSG=$1
 
-    echo "${blue}⇾ Doing « ${DOING_MSG} »…$resetColor"
+  echo "${blue}⇾ Doing « ${DOING_MSG} »…$resetColor"
 }
 
 function _done() {
-    local DONE="${1:-DONE}"
+  local DONE="${1:-DONE}"
 
-    [ -z "$1" ] || DONE="$1"
+  [ -z "$1" ] || DONE="$1"
 
-    echo
-    echo "${green} ${resetColor} ${DOING_MSG} : ${green}$DONE${resetColor}"
-    echo
+  echo
+  echo "${green}✔️ ${resetColor} ${DOING_MSG} : ${green}$DONE${resetColor}"
+  echo
 }
 
 function _doneNTD() {
-    _done 'Nothing to do…'
+  _done 'Nothing to do…'
 }
 
 function _warn() {
-    echo
-    echo "${yellow}⚠${resetColor} ${DOING_MSG} : ${bold}${yellow}$1${resetColor}${resetBold}"
-    echo
+  echo
+  echo "${yellow}⚠${resetColor} ${DOING_MSG} : ${bold}${yellow}$1${resetColor}${resetBold}"
+  echo
+}
+
+function _exit() {
+  [ "X$(basename "$0")" = "X$(basename "${BASH_SOURCE[0]}")" ] && exit "$1" || return "$1"
 }
 
 function _fail() {
-    echo "$bold${red} PROCESS ABORTED$resetColor$resetBold"
-    echo
+  echo "$bold${red}❌ PROCESS ABORTED${resetColor}${resetBold}"
+  echo
 
-    exit 1
+  _exit 1
 }
 
 function _do() {
-    # https://unix.stackexchange.com/questions/148109/shifting-command-output-to-the-right
-    echo "Executing command '$1'"
+  # https://unix.stackexchange.com/questions/148109/shifting-command-output-to-the-right
+  echo "Executing command '$1'"
 
-    $1 || _fail | nl -bn
+  {
+    if ! eval "$1" | nl -bn; then
+      _fail
+    fi
+  }
 }
 
-_doing 'Installing https://just.systems/man/en/'
-type just &>/dev/null && _doneNTD || {
-    _do "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"
-    _done
+function isConfigAppEnvNeeded() {
+  [ ! -e "${APP_ROOT_PATH}/.envrc" ] || grep -q 'CONFIG_APP_ENV' "${APP_ROOT_PATH}/.envrc"
 }
 
 function configAppEnv() {
-    local env_name
-    local env_choice
+  local env_name
+  local env_choice
 
-    grep -q 'CONFIG_APP_ENV' "${APP_ROOT_PATH}/.envrc" && {
-        echo -e "\t${yellow}[Configuration des variables applicatives]${resetColor}\n"
-        echo -e "\t${yellow}1${resetColor} : development\n"
-        echo -e "\t${yellow}2${resetColor} : formation\n"
-        echo -e "\t${yellow}3${resetColor} : staging\n"
-        echo -e "\t${yellow}4${resetColor} : production\n"
-        echo -e "Enter your choice: \c"
-        read env_choice
+  # shellcheck disable=SC2015
+  isConfigAppEnvNeeded && {
+    echo -e "\t${yellow}1${resetColor} : development\n"
+    echo -e "\t${yellow}2${resetColor} : staging\n"
+    echo -e "\t${yellow}3${resetColor} : production\n"
+    echo -e "Enter your choice: \c"
+    # shellcheck disable=SC2162
+    read env_choice
 
-        while [ -z "$env_choice" ] || [ "$env_choice" != "1" -a "$env_choice" != "2" -a "$env_choice" != '3' -a "$env_choice" != '4' ]; do
-            tput el
-            echo -e "Unsupported choice, enter your choice : \c"
-            read env_choice
+    while [ -z "$env_choice" ] || [[ "$env_choice" != "1" && "$env_choice" != "2" && "$env_choice" != "3" ]]; do
+      tput el
+      echo -e "Unsupported choice, enter your choice : \c"
+      # shellcheck disable=SC2162
+      read env_choice
 
-        done
+    done
 
-        case $env_choice in
-        1)
-            env_name="development"
-            ;;
-        3)
-            env_name="staging"
-            ;;
-        4)
-            env_name="production"
-            ;;
-        esac
+    case $env_choice in
+    1)
+      env_name="development"
+      ;;
+    2)
+      env_name="staging"
+      ;;
+    3)
+      env_name="production"
+      ;;
+    esac
 
-        sed -i "s/CONFIG_APP_ENV/${env_name}/g" "${APP_ROOT_PATH}/.set-deployment-env.rc"
+    sed -i "s/CONFIG_APP_ENV/${env_name}/g" "${APP_ROOT_PATH}/.envrc"
+    cp "${APP_ROOT_PATH}/config_${env_name}.toml.example" "${APP_ROOT_PATH}/config_${env_name}.toml"
 
-        _done
-    } || _doneNTD
+    _done
+  } || _doneNTD
 
-    [ -z "$env_name" ] || export APP_ENV=$env_name
+  [ -z "$env_name" ] || export APP_ENV=$env_name
 }
 
 _doing 'Configuration of APP_ENV'
-[ -e "${APP_ROOT_PATH}/.envrc" ] && _doneNTD || {
-    cp "${APP_ROOT_PATH}/.envrc.example" "${APP_ROOT_PATH}/.envrc"
-    configAppEnv
-}
+# shellcheck disable=SC2015
+if isConfigAppEnvNeeded; then
+  cp "${APP_ROOT_PATH}/.envrc.example" "${APP_ROOT_PATH}/.envrc"
+  configAppEnv
+else
+  _doneNTD
+fi
 
+# shellcheck disable=SC1091
 . ./.envrc || exit 1
 
+_doing 'Installing https://just.systems/man/en/'
+# shellcheck disable=SC2015
+type just &>/dev/null && _doneNTD || {
+  _do "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"
+  _done
+}
+
+_doing "Install Go cmd direnv"
+if ! type direnv &>/dev/null; then
+  _do "curl -sfL https://direnv.net/install.sh | bash --"
+
+  ## Configuration du shell si ce n'est pas déjà fait…
+  [ "$SHELL" == "/bin/bash" ] && {
+    # shellcheck disable=SC2016
+    grep -q 'direnv hook bash"' ~/.bashrc || echo 'type direnv &> /dev/null && eval "$(direnv hook bash)"' >>~/.bashrc
+  } || {
+    _warn "Configure your shell $SHELL to use direnv. See https://github.com/direnv/direnv/blob/master/docs/hook.md"
+  }
+
+  _done
+else
+  _done 'Already installed or in Docker container'
+fi
+
+type direnv &>/dev/null && direnv allow .
+
 _doing 'Installing/Updating Development Tools'
-[ "$APP_ENV" == 'development' ] && _do 'just install-dev' || _doneNTD
+# shellcheck disable=SC2015
+[ "$APP_ENV" == 'development' ] && {
+
+  type pre-commit &>/dev/null || {
+    _do 'echo "Installing pre-commit"'
+    pip install pre-commit || {
+      _warn "You must install pre-commit yourself and run again $0"
+      echo "See https://pre-commit.com/ for instruction"
+
+      _fail
+    }
+  }
+
+  type prettier &>/dev/null || _do 'npm install --save-dev --save-exact prettier'
+  _do 'npm install --save-dev prettier prettier-plugin-go-template'
+  _do 'npm i -D prettier prettier-plugin-toml'
+  _do 'npm i -D prettier prettier-plugin-sql'
+  type goreturns &>/dev/null || _do 'go get github.com/sqs/goreturns'
+  # type pre-commit &>/dev/null || go get github.com/go-lintpack/lintpack/...
+  # type pre-commit &>/dev/null || go get github.com/go-critic/go-critic/...
+  type golangci-lint &>/dev/null || _do 'go get github.com/golangci/golangci-lint/cmd/golangci-lint'
+
+  _do 'pre-commit install --install-hooks'
+} || _doneNTD
 
 _doing 'Installing binary dependencies'
-_do 'just install-prod'
+# shellcheck disable=SC2015
+[ "$APP_ENV" == 'development' ] && {
+  type buf &>/dev/null || _do 'go install github.com/bufbuild/buf/cmd/buf@latest'
+  type protoc-gen-go &>/dev/null || _do 'go install google.golang.org/protobuf/cmd/protoc-gen-go@latest'
 
-direnv allow
+  true
+} || _doneNTD
+
+_doing 'Install Go dependencies'
+_do 'go mod vendor'

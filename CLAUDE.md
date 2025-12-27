@@ -11,7 +11,7 @@ This is a production-ready Go application skeleton demonstrating **Clean Archite
 ### Development
 ```bash
 just dev              # Run development server (requires APP_ENV=development)
-go run ./cmd serve    # Alternative way to run server
+go run . serve    # Alternative way to run server
 ```
 
 ### Testing
@@ -37,7 +37,7 @@ just lint-fix         # Auto-fix linting issues
 ```bash
 just migrate-up       # Run migrations
 just migrate-down     # Rollback last migration
-go run ./cmd migrate up     # Alternative way
+go run . migrate up     # Alternative way
 ```
 
 ### Code Generation
@@ -58,7 +58,7 @@ This codebase enforces strict architectural boundaries. Understanding the depend
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ Infrastructure Layer (cmd/, internal/infra/)             │
+│ Infrastructure Layer (., internal/infra/)             │
 │ - API handlers, HTTP server, database, config, CLI      │
 │ - Depends on: Application layer (via service imports)   │
 │ - Implements: Domain ports (via adapters)               │

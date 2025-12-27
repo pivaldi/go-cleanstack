@@ -3,8 +3,5 @@
 ## This file is used for development purposes only.
 ## It should not be committed to version control.
 
-[server]
-port = 8085
-
 [database]
-url = "postgres://otherUser:otherPass@localhost:5432/cleanstack_development?sslmode=disable"
+url = "postgres://user:pass@localhost:5430/cleanstack_development?sslmode=disable"

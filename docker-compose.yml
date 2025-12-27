@@ -2,28 +2,31 @@
 services:
   app:
     build: .
-    ports:
-      - "8080:8080"
     environment:
-      - APP_ENV=development
+      APP_ENV: 'development'
+      PORT: 4224
+    ports:
+      - ${PORT:-4224}:${PORT:-4224}
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - ./config_development.toml:/config_development.toml:ro
+      - ./config_default.toml:/config_default.toml:ro
+      - ./config_${APP_ENV}.toml:/config_${APP_ENV}.toml:ro
 
   db:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: cleanstack
+      POSTGRES_DB: cleanstack_${APP_ENV}
+      POSTGRES_EXPORTED_PORT: 5430
     ports:
-      - "5432:5432"
+      - '5432:${POSTGRES_EXPORTED_PORT:-5430}'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d cleanstack"]
+      test: ['CMD-SHELL', 'pg_isready -U user -d cleanstack_${APP_ENV}']
       interval: 5s
       timeout: 5s
       retries: 5

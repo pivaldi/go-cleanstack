@@ -1,0 +1,8 @@
+[server]
+port = 4224
+
+[database]
+url = "postgres://user:pass@localhost:5432/cleanstack_development?sslmode=disable"
+
+[log]
+level = "debug"

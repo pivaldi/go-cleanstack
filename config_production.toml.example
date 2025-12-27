@@ -3,9 +3,6 @@
 ## This file is used for production purposes only.
 ## It should not be committed to version control.
 
-[server]
-port = 4200
-
 [database]
 url = "postgres://user:pass@prod-db:5432/cleanstack_production?sslmode=require"
 

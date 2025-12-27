@@ -122,24 +122,26 @@ transport/  - Transport layer utilities
 
 ## Prerequisites
 
-- Go 1.24 or higher
-- PostgreSQL 16
-- Docker and docker-compose (for testing and local development)
-- [buf](https://buf.build) (for protobuf generation)
-- [just](https://github.com/casey/just) (task runner)
-- [golangci-lint](https://golangci-lint.run) (optional, for linting)
+- Go 1.24 or higher (optional if the app is built from Docker)
+- PostgreSQL 16 or higher
+- Docker and docker-compose (for testing and **local development**)
+- Node.js/npm (for **local development**)
+- Python 3 (for pre-commit hooks and **local development**)
+
+**If the installation of Python 3 is system-wide, you must install [pre-commit](https://pre-commit.com/#install)
+yourself.**
 
 ## Getting Started
 
 ### 1. Install Dependencies
 
-```bash
-# Install Go dependencies
-go mod download
+Simply run this command :
 
-# Install development tools
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+```bash
+./configure
 ```
+
+This command can be launch as many times as you want.
 
 ### 2. Configuration
 
@@ -148,61 +150,39 @@ The application uses environment-based configuration with two files:
 1. `config_default.toml` - Base configuration (always loaded)
 2. `config_<env>.toml` - Environment-specific overrides (merged with default)
 
-Create environment-specific configuration:
-
-```bash
-cp config_default.toml config_development.toml
-# Edit config_development.toml with development settings
-
-cp config_default.toml config_production.toml
-# Edit config_production.toml with production settings
-```
-
 **Important:** Set `APP_ENV` environment variable to choose configuration (REQUIRED - no default):
 
 ```bash
 export APP_ENV=development  # or production
 ```
 
+Or use `[direnv](https://direnv.net/)`.
+
 ### 3. Start Database
 
 Using Docker:
 
-```bash
-just up
-```
-
-Or manually start PostgreSQL and update the database URL in your config file.
+`just up` or `docker-compose up -d` or manually start PostgreSQL and update the database URL in your config file.
 
 ### 4. Run Migrations
 
-```bash
-just migrate-up
-```
+`just migrate-up` or `./bin/cleanstack migrate up` or `go run . migrate up`
 
 ### 5. Run the Server
 
-```bash
-export APP_ENV=development
-just dev
-```
+`just dev` or `go run . serve`
 
-Or run directly:
-
-```bash
-APP_ENV=development go run main.go serve
-```
-
-The API will be available at `http://localhost:8080`.
+The API will be available at `http://localhost:4224`.
 
 ## Development Commands
 
-This project uses [just](https://github.com/casey/just) as a task runner. Available commands:
+This project uses [just](https://github.com/casey/just) as a task runner.  
+Available commands follow.
 
 ### Development
 ```bash
-just dev          # Run development server (requires APP_ENV env var)
 just generate-api # Generate code from protobuf definitions
+just dev          # Run development server (requires APP_ENV env var)
 ```
 
 ### Testing

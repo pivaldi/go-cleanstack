@@ -9,6 +9,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	migrationsDir = "file://migrations"
+)
+
+func SetMigrationsDir(dir string) {
+	migrationsDir = dir
+}
+
 func NewMigrateCmd() *cobra.Command {
 	migrateCmd := &cobra.Command{
 		Use:   "migrate",
@@ -27,7 +35,7 @@ func newMigrateUpCmd() *cobra.Command {
 		Short: "Run all pending migrations",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			m, err := migrate.New(
-				"file://internal/infra/persistence/migrations",
+				migrationsDir,
 				cfg.Database.URL,
 			)
 			if err != nil {
@@ -52,7 +60,7 @@ func newMigrateDownCmd() *cobra.Command {
 		Short: "Rollback the last migration",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			m, err := migrate.New(
-				"file://internal/infra/persistence/migrations",
+				migrationsDir,
 				cfg.Database.URL,
 			)
 			if err != nil {
