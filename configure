@@ -202,5 +202,5 @@ _doing 'Installing binary dependencies'
   true
 } || _doneNTD
 
-_doing 'Install Go dependencies'
+_doing 'Install Go dependencies for developement purpose'
 _do 'go mod vendor'

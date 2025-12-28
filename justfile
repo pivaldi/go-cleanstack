@@ -1,6 +1,6 @@
 #go-cleanstack justfile
 
-set shell := ["bash", '-c']
+set shell := ["bash", '-uc']
 
 [doc('Start the server in development mode')]
 dev:
@@ -37,15 +37,22 @@ test-cover:
     gotestsum -- -coverprofile=coverage.out ./...
     go tool cover -html=coverage.out -o coverage.html
 
-[doc('Migrations')]
+[doc('Migrations Up')]
 [group('database')]
-migrate-up:
-    go run ./main.go migrate up
+migration-up:
+    go run . migrate up
 
+[doc('Migrations Donw')]
 [group('database')]
-migrate-down:
-    go run ./main.go migrate down
+migration-down:
+    go run . migrate down
 
+[doc('Migrations Create NAME')]
+[group('database')]
+migration-create name:
+    go run . migrate create --name="{{ name }}"
+
+[doc('Connect to the Dockerized Database')]
 [group('database')]
 db-connect:
     docker exec -it cleanstack-db-${APP_ENV} psql -U user -d cleanstack_${APP_ENV}
