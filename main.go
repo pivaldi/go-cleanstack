@@ -29,10 +29,7 @@ func main() {
 	}
 
 	if err := cmd.NewRootCmd().Execute(); err != nil {
-		cfg, errr := config.GetConfig()
-		if errr != nil {
-			clierr.ExitOnError(errr, true)
-		}
+		cfg := config.Get()
 
 		debug := cfg.Log.Level == "debug"
 		clierr.ExitOnError(err, debug)

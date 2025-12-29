@@ -4,19 +4,19 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"go.uber.org/zap"
 
 	"github.com/pivaldi/go-cleanstack/internal/app/service"
 	cleanstackv1 "github.com/pivaldi/go-cleanstack/internal/infra/api/gen/cleanstack/v1"
 	"github.com/pivaldi/go-cleanstack/internal/infra/api/gen/cleanstack/v1/cleanstackv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type ItemHandler struct {
 	service *service.ItemService
-	logger  *zap.Logger
+	logger  logging.Logger
 }
 
-func NewItemHandler(svc *service.ItemService, logger *zap.Logger) *ItemHandler {
+func NewItemHandler(svc *service.ItemService, logger logging.Logger) *ItemHandler {
 	return &ItemHandler{
 		service: svc,
 		logger:  logger,

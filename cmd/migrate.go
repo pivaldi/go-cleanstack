@@ -52,7 +52,7 @@ func NewMigrateCmd() *cobra.Command {
 	migrateCmd.AddCommand(newMigrateCreateCmd())
 
 	// Set verbose mode to show SQL
-	goose.SetVerbose(cfg.Log.Level == "debug")
+	goose.SetVerbose(true)
 
 	return migrateCmd
 }

@@ -17,7 +17,7 @@ import (
 )
 
 func TestMigrations(t *testing.T) {
-	ctx := testcontainers.Context()
+	ctx := context.Background()
 
 	// Start PostgreSQL container
 	postgres, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

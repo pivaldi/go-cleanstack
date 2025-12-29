@@ -8,7 +8,7 @@ import (
 )
 
 // NewProduction creates a production logger (JSON format) with specified level
-func NewProduction(level string) (*zap.Logger, error) {
+func NewProduction(level string) (Logger, error) {
 	zapLevel, err := parseLevel(level)
 	if err != nil {
 		return nil, err
@@ -24,11 +24,14 @@ func NewProduction(level string) (*zap.Logger, error) {
 		return nil, fmt.Errorf("failed to build production logger: %w", err)
 	}
 
-	return logger, nil
+	return &zapLogger{
+		logger:        logger,
+		sugaredLogger: logger.Sugar(),
+	}, nil
 }
 
 // NewDevelopment creates a development logger (console format) with specified level
-func NewDevelopment(level string) (*zap.Logger, error) {
+func NewDevelopment(level string) (Logger, error) {
 	zapLevel, err := parseLevel(level)
 	if err != nil {
 		return nil, err
@@ -42,18 +45,39 @@ func NewDevelopment(level string) (*zap.Logger, error) {
 		return nil, fmt.Errorf("failed to build development logger: %w", err)
 	}
 
-	return logger, nil
+	return &zapLogger{
+		logger:        logger,
+		sugaredLogger: logger.Sugar(),
+	}, nil
 }
 
 // NewLogger creates a logger based on environment and level
 // env: "development" or "production"
 // level: "debug", "info", "warn", "error"
-func NewLogger(env, level string) (*zap.Logger, error) {
+func NewLogger(env, level string) (Logger, error) {
 	if env == "development" {
 		return NewDevelopment(level)
 	}
 
 	return NewProduction(level)
+}
+
+// NewNop returns a no-op logger for testing
+func NewNop() Logger {
+	nopLogger := zap.NewNop()
+	return &zapLogger{
+		logger:        nopLogger,
+		sugaredLogger: nopLogger.Sugar(),
+	}
+}
+
+// Must panics if logger creation fails
+func Must(logger Logger, err error) Logger {
+	if err != nil {
+		panic(fmt.Sprintf("failed to create logger: %v", err))
+	}
+
+	return logger
 }
 
 // parseLevel converts string level to zapcore.Level

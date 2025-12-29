@@ -10,15 +10,13 @@ import (
 
 var cfg *Config
 
+type appEnv string
+
 type Config struct {
-	App      appConfig
+	AppEnv   appEnv
 	Server   serverConfig
 	Database databaseConfig
 	Log      logConfig
-}
-
-type appConfig struct {
-	Env string
 }
 
 type serverConfig struct {
@@ -59,15 +57,15 @@ func Load(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	cfg.App.Env = env
+	cfg.AppEnv = appEnv(env)
 
 	return cfg, nil
 }
 
-func GetConfig() (*Config, error) {
+func Get() *Config {
 	if cfg == nil {
-		return nil, errors.New("config is not loaded")
+		panic(errors.New("config is not loaded. Use config.Load() to initialize"))
 	}
 
-	return cfg, nil
+	return cfg
 }

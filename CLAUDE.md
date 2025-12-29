@@ -229,7 +229,7 @@ APP_ENV=production go run ./cmd serve --log-level debug
 ```
 
 ### Logger Configuration
-- Logger is initialized in `cmd/root.go` via `PersistentPreRunE`
+- Logger is initialized in `cmd/root.go` via `PersistentPreRunE` and returns `logging.Logger` interface
 - Log level precedence: CLI flag `--log-level` → config file → default
 - Development environment → console logger (human-readable)
 - Production environment → JSON logger (structured)
@@ -244,19 +244,21 @@ APP_ENV=production go run ./cmd serve --log-level debug
 
 ### Test File Requirements
 All test files should:
-- Use `zap.NewNop()` for logger in constructors
+- Use `logging.NewNop()` for logger in constructors
 - Set `APP_ENV` environment variable in config tests: `os.Setenv("APP_ENV", "development")`
 - Clean up with `t.Cleanup(func() { os.Unsetenv("APP_ENV") })`
 
 ### Common Test Patterns
 ```go
+import "github.com/pivaldi/go-cleanstack/internal/platform/logging"
+
 // Service layer unit test (uses mock repo)
 mockRepo := new(MockItemRepository)
-logger := zap.NewNop()
+logger := logging.NewNop()
 svc := service.NewItemService(mockRepo, logger)
 
 // Integration test (uses testcontainers)
-logger := zap.NewNop()
+logger := logging.NewNop()
 repo := persistence.NewItemRepo(db, logger)
 ```
 
@@ -320,24 +322,68 @@ Update handlers in `internal/infra/api/handler/` to match new service interfaces
 Loggers are passed via dependency injection:
 
 ```go
+import "github.com/pivaldi/go-cleanstack/internal/platform/logging"
+
 // Add logger field to struct
 type MyService struct {
-    logger *zap.Logger
+    logger logging.Logger
 }
 
 // Add logger parameter to constructor
-func NewMyService(logger *zap.Logger) *MyService {
+func NewMyService(logger logging.Logger) *MyService {
     return &MyService{logger: logger}
 }
 
 // Use structured logging
 s.logger.Info("operation started",
-    zap.String("field", value),
-    zap.Error(err),
+    logging.String("field", value),
+    logging.Err(err),
 )
 ```
 
 **Never** create loggers inside components - always receive via constructor.
+
+### Logging Abstraction Layer
+
+The application uses a custom logging abstraction in `internal/platform/logging/` that hides the underlying logging implementation (currently zap):
+
+**Key Benefits:**
+- Swappable logging backend without changing application code
+- Consistent logging interface across the codebase
+- Easier testing with interface-based mocking
+- Type-safe field constructors
+
+**Available Field Constructors:**
+- Basic types: `String()`, `Int()`, `Int64()`, `Bool()`, `Float64()`, etc.
+- Pointer variants: `Stringp()`, `Intp()`, `Boolp()`, etc. (handle nil safely)
+- Arrays: `Strings()`, `Ints()`, `Bools()`, etc.
+- Special types: `Err()`, `Duration()`, `Time()`, `Binary()`, `Stack()`
+- Structured: `Object()`, `Dict()`, `Inline()`
+
+**Creating Loggers:**
+```go
+// Environment-based logger
+logger, err := logging.NewLogger("development", "debug")
+
+// Production logger
+logger, err := logging.NewProduction("info")
+
+// Development logger
+logger, err := logging.NewDevelopment("debug")
+
+// No-op logger for testing
+logger := logging.NewNop()
+
+// Panic-on-error helper
+logger := logging.Must(logging.NewProduction("info"))
+```
+
+**Logger Methods:**
+- Structured: `Info()`, `Debug()`, `Warn()`, `Error()`, `Fatal()`, `Panic()`
+- Formatted: `Infof()`, `Debugf()`, `Warnf()`, `Errorf()`, `Fatalf()`, `Panicf()`
+- Context-aware: `InfoContext()`, `DebugContext()`, etc.
+- Child loggers: `With(fields...)`, `Named(name)`
+- Cleanup: `Sync()`
 
 ## File Naming Conventions
 

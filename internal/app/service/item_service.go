@@ -5,18 +5,18 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 
 	"github.com/pivaldi/go-cleanstack/internal/domain/entity"
 	"github.com/pivaldi/go-cleanstack/internal/domain/ports"
+	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type ItemService struct {
 	repo   ports.ItemRepository
-	logger *zap.Logger
+	logger logging.Logger
 }
 
-func NewItemService(repo ports.ItemRepository, logger *zap.Logger) *ItemService {
+func NewItemService(repo ports.ItemRepository, logger logging.Logger) *ItemService {
 	return &ItemService{
 		repo:   repo,
 		logger: logger,

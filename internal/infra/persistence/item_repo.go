@@ -7,7 +7,8 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
+
+	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type itemRow struct {
@@ -21,10 +22,10 @@ type itemRow struct {
 // It works only with DTOs and has NO dependency on domain
 type ItemRepo struct {
 	db     *sqlx.DB
-	logger *zap.Logger
+	logger logging.Logger
 }
 
-func NewItemRepo(db *sqlx.DB, logger *zap.Logger) *ItemRepo {
+func NewItemRepo(db *sqlx.DB, logger logging.Logger) *ItemRepo {
 	return &ItemRepo{
 		db:     db,
 		logger: logger,

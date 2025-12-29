@@ -34,5 +34,5 @@ level = "debug"
 	assert.Equal(t, 8080, cfg.Server.Port)
 	assert.Equal(t, "postgres://localhost/test", cfg.Database.URL)
 	assert.Equal(t, "debug", cfg.Log.Level)
-	assert.Equal(t, "development", cfg.App.Env)
+	assert.Equal(t, "development", string(cfg.AppEnv))
 }

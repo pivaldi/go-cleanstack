@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"go.uber.org/zap"
-
 	"github.com/pivaldi/go-cleanstack/internal/infra/config"
 	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 	"github.com/spf13/cobra"
@@ -13,7 +11,7 @@ import (
 
 var (
 	cfg      *config.Config
-	logger   *zap.Logger
+	logger   logging.Logger
 	logLevel string
 )
 
@@ -39,15 +37,10 @@ func NewRootCmd() *cobra.Command {
 				effectiveLogLevel = logLevel
 			}
 
-			logger, err = logging.NewLogger(cfg.App.Env, effectiveLogLevel)
+			logger, err = logging.NewLogger(string(cfg.AppEnv), effectiveLogLevel)
 			if err != nil {
 				return fmt.Errorf("failed to initialize logger: %w", err)
 			}
-
-			logger.Info("application starting",
-				zap.String("env", cfg.App.Env),
-				zap.String("log_level", effectiveLogLevel),
-			)
 
 			return nil
 		},
