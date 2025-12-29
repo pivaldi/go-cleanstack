@@ -3,11 +3,11 @@
 package testutil
 
 import (
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"context"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 )
 
 func SetupTestDB(databaseURL string) (*sqlx.DB, error) {
@@ -16,16 +16,11 @@ func SetupTestDB(databaseURL string) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	// Run migrations
-	m, err := migrate.New(
-		"file://../../migrations",
-		databaseURL,
-	)
-	if err != nil {
-		return nil, err
-	}
+	// Run migrations using Goose
+	ctx := context.Background()
+	migrationsPath := "../../internal/infra/persistence/migrations"
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := goose.UpContext(ctx, db.DB, migrationsPath); err != nil {
 		return nil, err
 	}
 

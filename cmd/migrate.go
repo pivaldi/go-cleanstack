@@ -1,52 +1,44 @@
 package cmd
 
 import (
+	"bufio"
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
+	"github.com/pivaldi/go-cleanstack/internal/infra/persistence/migrations"
 	stringpkg "github.com/pivaldi/go-cleanstack/pkg/string"
+	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
 )
 
-var (
-	migrationsDir = "migrations"
+type migrationType int
+
+const (
+	sqlMigration migrationType = iota
+	goMigration
 )
 
-type migrationLogger struct{}
+const (
+	defaultMigrationsDir = "internal/infra/persistence/migrations"
+)
 
-func (l *migrationLogger) Printf(format string, args ...any) {
-	fmt.Printf(format, args...)
-}
+var (
+	migrationsDir = defaultMigrationsDir
+)
 
-func (l *migrationLogger) Verbose() bool {
-	return true
-}
-
-func newMigrator() (*migrate.Migrate, error) {
-	m, err := migrate.New(
-		"file://"+migrationsDir,
-		cfg.Database.URL,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create migrator: %w", err)
-	}
-
-	m.Log = &migrationLogger{}
-
-	return m, nil
-}
-
+// SetMigrationsDir sets the migrations directory (for testing).
 func SetMigrationsDir(dir string) {
 	migrationsDir = dir
 }
 
+// NewMigrateCmd creates the migrate command with subcommands.
 func NewMigrateCmd() *cobra.Command {
 	migrateCmd := &cobra.Command{
 		Use:   "migrate",
@@ -55,7 +47,12 @@ func NewMigrateCmd() *cobra.Command {
 
 	migrateCmd.AddCommand(newMigrateUpCmd())
 	migrateCmd.AddCommand(newMigrateDownCmd())
+	migrateCmd.AddCommand(newMigrateStatusCmd())
+	migrateCmd.AddCommand(newMigrateVersionCmd())
 	migrateCmd.AddCommand(newMigrateCreateCmd())
+
+	// Set verbose mode to show SQL
+	goose.SetVerbose(cfg.Log.Level == "debug")
 
 	return migrateCmd
 }
@@ -65,18 +62,25 @@ func newMigrateUpCmd() *cobra.Command {
 		Use:   "up",
 		Short: "Run all pending migrations",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			m, err := newMigrator()
-
+			ctx := context.Background()
+			db, err := getDBConnection()
 			if err != nil {
 				return err
 			}
-			defer m.Close()
+			defer db.Close()
 
-			if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+			// Run migrations (use embedded or filesystem)
+			if err := runMigrations(ctx, db, goose.UpContext); err != nil {
 				return fmt.Errorf("failed to run migrations: %w", err)
 			}
 
-			fmt.Println("Migrations completed successfully")
+			// Get new version
+			newVersion, err := goose.GetDBVersionContext(ctx, db)
+			if err != nil {
+				return fmt.Errorf("failed to get new version: %w", err)
+			}
+
+			fmt.Printf("\nMigrations complete. Database at version %d\n", newVersion)
 
 			return nil
 		},
@@ -88,18 +92,79 @@ func newMigrateDownCmd() *cobra.Command {
 		Use:   "down",
 		Short: "Rollback the last migration",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			m, err := newMigrator()
-
+			ctx := context.Background()
+			db, err := getDBConnection()
 			if err != nil {
 				return err
 			}
-			defer m.Close()
+			defer db.Close()
 
-			if err := m.Down(); err != nil && err != migrate.ErrNoChange {
+			// Get current version
+			currentVersion, err := goose.GetDBVersionContext(ctx, db)
+			if err != nil {
+				return fmt.Errorf("failed to get current version: %w", err)
+			}
+
+			fmt.Printf("Current database version: %d\n", currentVersion)
+
+			// Rollback one migration (use embedded or filesystem)
+			if err := runMigrations(ctx, db, goose.DownContext); err != nil {
 				return fmt.Errorf("failed to rollback migration: %w", err)
 			}
 
-			fmt.Println("Migration rolled back successfully")
+			// Get new version
+			newVersion, err := goose.GetDBVersionContext(ctx, db)
+			if err != nil {
+				return fmt.Errorf("failed to get new version: %w", err)
+			}
+
+			fmt.Printf("\nRollback complete. Database at version %d\n", newVersion)
+
+			return nil
+		},
+	}
+}
+
+func newMigrateStatusCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "status",
+		Short: "Show migration status",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			ctx := context.Background()
+			db, err := getDBConnection()
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+
+			// Get migration status (use embedded or filesystem)
+			if err := runMigrations(ctx, db, goose.StatusContext); err != nil {
+				return fmt.Errorf("failed to get migration status: %w", err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func newMigrateVersionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Show current database version",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			ctx := context.Background()
+			db, err := getDBConnection()
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+
+			version, err := goose.GetDBVersionContext(ctx, db)
+			if err != nil {
+				return fmt.Errorf("failed to get database version: %w", err)
+			}
+
+			fmt.Printf("Database version: %d\n", version)
 
 			return nil
 		},
@@ -107,65 +172,149 @@ func newMigrateDownCmd() *cobra.Command {
 }
 
 func newMigrateCreateCmd() *cobra.Command {
-	var name string
-
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "create",
 		Short: "Create a new migration",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			if name == "" {
-				return errors.New("migration name is required")
-			}
+			reader := bufio.NewReader(os.Stdin)
 
-			ut := time.Now().UnixNano()
-
-			err := createMigrationFile(name, ut)
+			// Prompt for description
+			fmt.Print("Migration description: ")
+			description, err := reader.ReadString('\n')
 			if err != nil {
-				return fmt.Errorf("failed to create migration file: %w", err)
+				return fmt.Errorf("failed to read description: %w", err)
 			}
+			description = strings.TrimSpace(description)
+
+			// Validate description
+			if err := migrations.ValidateDescription(description); err != nil {
+				return fmt.Errorf("error retrieving description: %w", err)
+			}
+
+			// Prompt for migration type
+			fmt.Println("Migration type: [1] SQL  [2] Go")
+			fmt.Print("> ")
+			choiceStr, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to read migration type: %w", err)
+			}
+			choiceStr = strings.TrimSpace(choiceStr)
+
+			var migrationType migrationType
+			switch choiceStr {
+			case "1":
+				migrationType = sqlMigration
+			case "2":
+				migrationType = goMigration
+			default:
+				return errors.New("invalid migration type, choose 1 or 2")
+			}
+
+			// Create migration file
+			filePath, err := createMigrationFile(migrationsDir, description, migrationType)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("\nCreated: %s\n", filePath)
 
 			return nil
 		},
 	}
-
-	cmd.Flags().StringVarP(&name, "name", "n", "", "Name of the migration")
-
-	return cmd
 }
 
-// createMigrationFile implements the logic to create a migration file with the given name and timestamp
-// Return an error if the file creation fails
-func createMigrationFile(name string, timestamp int64) error {
-	format := "%s_%s.%s.sql"
-	lastCreated := ""
-	version := strconv.FormatInt(timestamp, 10)
-
-	for _, action := range []string{"up", "down"} {
-		fullName := fmt.Sprintf(format, version, name, action)
-		path, err := stringpkg.NormalizeFileName(filepath.Clean(filepath.Join(migrationsDir, fullName)))
-		if err != nil {
-			return fmt.Errorf("failed to normalize migration file name: %w", err)
-		}
-
-		file, err := os.Create(path)
-		if err != nil {
-			if lastCreated != "" {
-				if errr := os.Remove(lastCreated); errr != nil {
-					return fmt.Errorf("failed to remove partial migration %s : %w", path, err)
-				}
-			}
-
-			return fmt.Errorf("failed to create %s migration file: %w", path, err)
-		}
-
-		err = file.Close()
-		if err != nil {
-			return fmt.Errorf("failed to close migration file: %w", err)
-		}
-
-		lastCreated = path
-		fmt.Printf("Migration created successfully: %s\n", path)
+// createMigrationFile creates a new migration file.
+func createMigrationFile(dir, description string, migrationType migrationType) (string, error) {
+	// Validate description
+	if err := migrations.ValidateDescription(description); err != nil {
+		return "", fmt.Errorf("migration description is not valid: %w", err)
 	}
 
-	return nil
+	// Normalize description for filename using existing NormalizeFileName
+	normalizedDesc, err := stringpkg.NormalizeFileName(description)
+	if err != nil {
+		return "", fmt.Errorf("failed to normalize description: %w", err)
+	}
+
+	// Generate timestamp
+	timestamp := time.Now().Format("20060102150405")
+
+	// Generate filename
+	var filename string
+	if migrationType == sqlMigration {
+		filename = fmt.Sprintf("%s_%s.sql", timestamp, normalizedDesc)
+	} else {
+		filename = fmt.Sprintf("%s_%s.go", timestamp, normalizedDesc)
+	}
+
+	filePath := filepath.Join(dir, filename)
+
+	// Ensure directory exists
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create migrations directory: %w", err)
+	}
+
+	// Render template
+	var content string
+	if migrationType == sqlMigration {
+		content, err = renderSQLTemplate()
+	} else {
+		content, err = renderGoTemplate(normalizedDesc)
+	}
+	if err != nil {
+		return "", err
+	}
+
+	//
+	if err := os.WriteFile(filePath, []byte(content), 0600); err != nil {
+		return "", fmt.Errorf("failed to write migration file: %w", err)
+	}
+
+	// Get absolute path for output
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		absPath = filePath
+	}
+
+	return absPath, nil
+}
+
+// getDBConnection returns a database connection.
+func getDBConnection() (*sql.DB, error) {
+	if cfg == nil {
+		return nil, errors.New("configuration not loaded")
+	}
+
+	db, err := sql.Open("postgres", cfg.Database.URL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+
+	if err := db.PingContext(context.TODO()); err != nil {
+		db.Close()
+
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	return db, nil
+}
+
+// runMigrations executes migrations using embedded FS or filesystem depending on availability.
+type migrationFunc func(context.Context, *sql.DB, string, ...goose.OptionsFunc) error
+
+func runMigrations(ctx context.Context, db *sql.DB, fn migrationFunc) error {
+	// Check if external migrations directory exists
+	if _, err := os.Stat(migrationsDir); err == nil {
+		// Use filesystem migrations (development mode)
+		return fn(ctx, db, migrationsDir)
+	}
+
+	// Use embedded migrations (production mode)
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("failed to set dialect: %w", err)
+	}
+
+	goose.SetBaseFS(migrations.FS)
+
+	return fn(ctx, db, ".")
 }

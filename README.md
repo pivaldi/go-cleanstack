@@ -11,7 +11,7 @@ A production-ready Go application skeleton demonstrating Clean Architecture prin
 - **Hexagonal Architecture**: Ports and adapters pattern for dependency inversion
 - **Connect RPC**: Modern RPC framework built on protobuf and HTTP/2
 - **CLI Interface**: Cobra-based command-line interface
-- **Database**: PostgreSQL with sqlx and golang-migrate
+- **Database**: PostgreSQL with sqlx and Goose v3 migrations
 - **Configuration**: Viper-based configuration with environment-specific TOML files
 - **Testing**: Full test pyramid (unit, integration, e2e) with testcontainers
 - **Docker**: Production-ready Docker setup with docker-compose
@@ -176,7 +176,7 @@ The API will be available at `http://localhost:4224`.
 
 ## Development Commands
 
-This project uses [just](https://github.com/casey/just) as a task runner.  
+This project uses [just](https://github.com/casey/just) as a task runner.
 Available commands follow.
 
 ### Development

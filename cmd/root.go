@@ -39,7 +39,6 @@ func NewRootCmd() *cobra.Command {
 				effectiveLogLevel = logLevel
 			}
 
-			// Initialize logger
 			logger, err = logging.NewLogger(cfg.App.Env, effectiveLogLevel)
 			if err != nil {
 				return fmt.Errorf("failed to initialize logger: %w", err)

@@ -361,7 +361,7 @@ s.logger.Info("operation started",
 - Connection pool configured in `internal/infra/persistence/db.go`
 - Max open connections: 25 (constant `maxOpenConns`)
 - Max idle connections: 5 (constant `maxIdleConns`)
-- Migrations managed by golang-migrate
+- Migrations managed by Goose v3 (timestamp-based)
 
 ### HTTP Server Configuration
 The server in `internal/infra/api/server.go` requires proper timeout configuration for security:

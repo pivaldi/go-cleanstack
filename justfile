@@ -39,18 +39,18 @@ test-cover:
 
 [doc('Migrations Up')]
 [group('database')]
-migration-up:
+migrate-up:
     go run . migrate up
 
-[doc('Migrations Donw')]
+[doc('Migrations Down')]
 [group('database')]
-migration-down:
+migrate-down:
     go run . migrate down
 
-[doc('Migrations Create NAME')]
+[doc('Migrations Create (interactive)')]
 [group('database')]
-migration-create name:
-    go run . migrate create --name="{{ name }}"
+migrate-create:
+    go run . migrate create
 
 [doc('Connect to the Dockerized Database')]
 [group('database')]

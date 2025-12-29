@@ -1,7 +1,7 @@
 # .golangci.yml
-version: "2"
+version: '2'
 run:
-  go: "1.24"
+  go: '1.24'
   issues-exit-code: 1
   tests: false
   allow-parallel-runners: true
@@ -104,14 +104,21 @@ linters:
         - return
         - assign
       ignored-numbers:
-        - "0666"
-        - "0755"
-        - "42"
-        - "1"
-        - "2"
-        - "3"
-        - "4"
-        - "5"
+        - '0666'
+        - '0600'
+        - '0644'
+        - '0755'
+        - '0777'
+        - '0700'
+        - '42'
+        - '1'
+        - '2'
+        - '3'
+        - '4'
+        - '5'
+        - '8'
+        - '16'
+        - '32'
       ignored-files:
         - magic1_.+\.go$
       ignored-functions:
@@ -156,17 +163,17 @@ linters:
       - std-error-handling
     rules:
       - path: pkg/golinters/errcheck.go
-        text: "SA1019: errCfg.Exclude is deprecated: use ExcludeFunctions instead"
+        text: 'SA1019: errCfg.Exclude is deprecated: use ExcludeFunctions instead'
       - path: pkg/commands/run.go
-        text: "SA1019: lsc.Errcheck.Exclude is deprecated: use ExcludeFunctions instead"
+        text: 'SA1019: lsc.Errcheck.Exclude is deprecated: use ExcludeFunctions instead'
       - path: pkg/commands/run.go
-        text: "SA1019: e.cfg.Run.Deadline is deprecated: Deadline exists for historical compatibility and should not be used."
+        text: 'SA1019: e.cfg.Run.Deadline is deprecated: Deadline exists for historical compatibility and should not be used.'
       - path: pkg/golinters/gofumpt.go
-        text: "SA1019: settings.LangVersion is deprecated: use the global `run.go` instead."
+        text: 'SA1019: settings.LangVersion is deprecated: use the global `run.go` instead.'
       - path: pkg/golinters/staticcheck_common.go
-        text: "SA1019: settings.GoVersion is deprecated: use the global `run.go` instead."
+        text: 'SA1019: settings.GoVersion is deprecated: use the global `run.go` instead.'
       - path: pkg/lint/lintersdb/manager.go
-        text: "SA1019: (.+).(GoVersion|LangVersion) is deprecated: use the global `run.go` instead."
+        text: 'SA1019: (.+).(GoVersion|LangVersion) is deprecated: use the global `run.go` instead.'
       - path: pkg/golinters/unused.go
         text: 'rangeValCopy: each iteration copies 160 bytes \(consider pointers or indexing\)'
       - path: test/(fix|linters)_test.go
