@@ -6,6 +6,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -34,7 +35,8 @@ func TestItemRepo_CRUD(t *testing.T) {
 	t.Run("Create and GetByID", func(t *testing.T) {
 		testutil.CleanupTestDB(db)
 
-		item := entity.NewItem("test-id-1", "Test Item", "Test Description")
+		id := uuid.New().String()
+		item := entity.NewItem(id, "Test Item", "Test Description")
 
 		// Convert to DTO
 		dto := &persistence.ItemDTO{
@@ -47,7 +49,7 @@ func TestItemRepo_CRUD(t *testing.T) {
 		err := repo.Create(ctx, dto)
 		require.NoError(t, err)
 
-		retrieved, err := repo.GetByID(ctx, "test-id-1")
+		retrieved, err := repo.GetByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, item.ID, retrieved.ID)
 		assert.Equal(t, item.Name, retrieved.Name)
@@ -57,8 +59,10 @@ func TestItemRepo_CRUD(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		testutil.CleanupTestDB(db)
 
-		item1 := entity.NewItem("test-id-2", "Item 1", "Desc 1")
-		item2 := entity.NewItem("test-id-3", "Item 2", "Desc 2")
+		id1 := uuid.New().String()
+		id2 := uuid.New().String()
+		item1 := entity.NewItem(id1, "Item 1", "Desc 1")
+		item2 := entity.NewItem(id2, "Item 2", "Desc 2")
 
 		dto1 := &persistence.ItemDTO{
 			ID:          item1.ID,
@@ -84,7 +88,8 @@ func TestItemRepo_CRUD(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		testutil.CleanupTestDB(db)
 
-		item := entity.NewItem("test-id-4", "To Delete", "Will be deleted")
+		id := uuid.New().String()
+		item := entity.NewItem(id, "To Delete", "Will be deleted")
 		dto := &persistence.ItemDTO{
 			ID:          item.ID,
 			Name:        item.Name,
@@ -93,10 +98,10 @@ func TestItemRepo_CRUD(t *testing.T) {
 		}
 		require.NoError(t, repo.Create(ctx, dto))
 
-		err := repo.Delete(ctx, "test-id-4")
+		err := repo.Delete(ctx, id)
 		require.NoError(t, err)
 
-		_, err = repo.GetByID(ctx, "test-id-4")
+		_, err = repo.GetByID(ctx, id)
 		assert.Error(t, err)
 	})
 }

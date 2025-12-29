@@ -138,7 +138,11 @@ func (l *zapLogger) Named(name string) Logger {
 }
 
 func (l *zapLogger) Sync() error {
-	return fmt.Errorf("failed to sync logger: %w", l.logger.Sync())
+	if err := l.logger.Sync(); err != nil {
+		return fmt.Errorf("failed to sync logger: %w", err)
+	}
+
+	return nil
 }
 
 // toZapField converts our Field to zap.Field
@@ -285,7 +289,11 @@ type objectMarshalerAdapter struct {
 }
 
 func (a objectMarshalerAdapter) MarshalLogObject(enc zapcore.ObjectEncoder) error {
-	return fmt.Errorf("failed to marshal object field %w", a.om.MarshalLogObject(objectEncoderAdapter{enc}))
+	if err := a.om.MarshalLogObject(objectEncoderAdapter{enc}); err != nil {
+		return fmt.Errorf("failed to marshal object field: %w", err)
+	}
+
+	return nil
 }
 
 // objectEncoderAdapter adapts zapcore.ObjectEncoder to our ObjectEncoder
@@ -322,11 +330,19 @@ func (a objectEncoderAdapter) AddTime(key string, val time.Time) {
 }
 
 func (a objectEncoderAdapter) AddObject(key string, val ObjectMarshaler) error {
-	return fmt.Errorf("failed to add object field %w", a.enc.AddObject(key, objectMarshalerAdapter{val}))
+	if err := a.enc.AddObject(key, objectMarshalerAdapter{val}); err != nil {
+		return fmt.Errorf("failed to add object field: %w", err)
+	}
+
+	return nil
 }
 
 func (a objectEncoderAdapter) AddArray(key string, val ArrayMarshaler) error {
-	return fmt.Errorf("failed to add array field %w", a.enc.AddArray(key, arrayMarshalerAdapter{val}))
+	if err := a.enc.AddArray(key, arrayMarshalerAdapter{val}); err != nil {
+		return fmt.Errorf("failed to add array field: %w", err)
+	}
+
+	return nil
 }
 
 // arrayMarshalerAdapter adapts our ArrayMarshaler to zapcore.ArrayMarshaler
@@ -335,7 +351,11 @@ type arrayMarshalerAdapter struct {
 }
 
 func (a arrayMarshalerAdapter) MarshalLogArray(enc zapcore.ArrayEncoder) error {
-	return fmt.Errorf("failed to marshal array field %w", a.am.MarshalLogArray(arrayEncoderAdapter{enc}))
+	if err := a.am.MarshalLogArray(arrayEncoderAdapter{enc}); err != nil {
+		return fmt.Errorf("failed to marshal array field: %w", err)
+	}
+
+	return nil
 }
 
 // arrayEncoderAdapter adapts zapcore.ArrayEncoder to our ArrayEncoder
@@ -372,5 +392,9 @@ func (a arrayEncoderAdapter) AppendTime(val time.Time) {
 }
 
 func (a arrayEncoderAdapter) AppendObject(val ObjectMarshaler) error {
-	return fmt.Errorf("failed to append object field %w", a.enc.AppendObject(objectMarshalerAdapter{val}))
+	if err := a.enc.AppendObject(objectMarshalerAdapter{val}); err != nil {
+		return fmt.Errorf("failed to append object field: %w", err)
+	}
+
+	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"path/filepath"
 	"testing"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
@@ -19,7 +20,7 @@ import (
 func TestMigrations(t *testing.T) {
 	ctx := context.Background()
 
-	// Start PostgreSQL container
+	// Start PostgreSQL container with robust wait strategy
 	postgres, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        "postgres:16-alpine",
@@ -29,7 +30,10 @@ func TestMigrations(t *testing.T) {
 				"POSTGRES_PASSWORD": "test",
 				"POSTGRES_DB":       "testdb",
 			},
-			WaitingFor: wait.ForLog("database system is ready to accept connections"),
+			WaitingFor: wait.ForAll(
+				wait.ForLog("database system is ready to accept connections").WithOccurrence(2),
+				wait.ForListeningPort("5432/tcp"),
+			).WithDeadline(60 * time.Second),
 		},
 		Started: true,
 	})
