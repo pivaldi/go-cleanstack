@@ -1,6 +1,9 @@
 #go-cleanstack justfile
 
 set shell := ["bash", '-uc']
+set dotenv-load := true
+
+GOTESTSUM_OPTIONS := "--format testdox"
 
 [doc('Start the server in development mode')]
 dev:
@@ -14,27 +17,27 @@ generate-api:
 [doc('unit tests')]
 [group('test')]
 test:
-    gotestsum -- ./...
+    gotestsum {{ GOTESTSUM_OPTIONS }} -- -v ./...
 
 [doc('integration tests')]
 [group('test')]
 test-int:
-    gotestsum -- -tags=integration ./tests/integration/...
+    gotestsum {{ GOTESTSUM_OPTIONS }} -- -v -tags=integration ./tests/integration/...
 
 [doc('end-to-end tests')]
 [group('test')]
 test-e2e:
-    gotestsum -- -tags=e2e ./tests/e2e/...
+    gotestsum {{ GOTESTSUM_OPTIONS }} -- -v -tags=e2e ./tests/e2e/...
 
 [doc('all tests')]
 [group('test')]
-test-all:
-    gotestsum -- -tags=integration,e2e ./...
+test-all: test
+    gotestsum {{ GOTESTSUM_OPTIONS }} -- -v -tags=integration,e2e ./...
 
 [doc('coverage tests')]
 [group('test')]
 test-cover:
-    gotestsum -- -coverprofile=coverage.out ./...
+    gotestsum {{ GOTESTSUM_OPTIONS }} -- -v -coverprofile=coverage.out ./...
     go tool cover -html=coverage.out -o coverage.html
 
 [doc('Migrations Up')]
