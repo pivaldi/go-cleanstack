@@ -16,6 +16,7 @@ docs/
 
 # Test
 coverage.out
+coverage.html
 
 # Go
 vendor/

@@ -184,10 +184,8 @@ _doing 'Installing/Updating Development Tools'
   _do 'npm install --save-dev prettier prettier-plugin-go-template'
   _do 'npm i -D prettier prettier-plugin-toml'
   _do 'npm i -D prettier prettier-plugin-sql'
-  type goreturns &>/dev/null || _do 'go get github.com/sqs/goreturns'
-  # type pre-commit &>/dev/null || go get github.com/go-lintpack/lintpack/...
-  # type pre-commit &>/dev/null || go get github.com/go-critic/go-critic/...
-  type golangci-lint &>/dev/null || _do 'go install github.com/golangci/golangci-lint/cmd/golangci-lint'
+  # type goreturns &>/dev/null || _do 'go get github.com/sqs/goreturns'
+  type golangci-lint &>/dev/null || _do 'curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOBIN)/bin v2.7.2'
   type goimports &>/dev/null || _do 'go install golang.org/x/tools/cmd/goimports@latest'
 
   _do 'pre-commit install --install-hooks'
