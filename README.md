@@ -3,7 +3,7 @@
 ## THIS IS A WORK IN PROGRESS !
 ## DO NOT USE IN PRODUCTION !
 
-A production-ready Go application skeleton demonstrating Clean Architecture principles with Domain-Driven Design (DDD) and Hexagonal Architecture (Ports & Adapters).
+A production-ready Go multi-module applications demonstrating Clean Architecture principles with Domain-Driven Design and Hexagonal Architecture governed by an unique CLI projet manager.
 
 ## Features
 

@@ -22,7 +22,7 @@ func GetRootCmd() *cobra.Command {
 		Short: "Application",
 		Long:  "Application",
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			cfg := config.GetConfig()
+			cfg := config.Get()
 			if cfg == nil {
 				var err error
 				cfg, err = config.Load(configPath)
@@ -57,7 +57,7 @@ func GetRootCmd() *cobra.Command {
 }
 
 func setup() {
-	cfg := config.GetConfig()
+	cfg := config.Get()
 	logger, err := zap.NewDevelopment(cfg.Platform.Log.Level)
 	if err != nil {
 		panic(err)

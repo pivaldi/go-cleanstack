@@ -19,10 +19,14 @@ func SetConfig(c *Config) {
 	cfg = c
 }
 
-func GetConfig() *Config {
+func MustGet() *Config {
 	if cfg == nil {
 		panic(errors.New("config is not loaded. Use config.Load() to initialize"))
 	}
+	return cfg
+}
+
+func Get() *Config {
 	return cfg
 }
 
@@ -40,7 +44,10 @@ func Load(configPath string) (*Config, error) {
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(configPath)
-	_ = viper.ReadInConfig()
+
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("error loading default configuration : %w", err)
+	}
 
 	viper.SetConfigName("config_" + env)
 
@@ -55,12 +62,4 @@ func Load(configPath string) (*Config, error) {
 	cfg.Platform.AppEnv = config.AppEnv(env)
 
 	return cfg, nil
-}
-
-func Get() *Config {
-	if cfg == nil {
-		panic(errors.New("config is not loaded. Use config.Load() to initialize"))
-	}
-
-	return cfg
 }

@@ -17,7 +17,7 @@ func NewServeCmd() *cobra.Command {
 		Use:   "serve",
 		Short: "Start the HTTP server",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			cfg := appConfig.GetConfig()
+			cfg := appConfig.Get()
 
 			db, err := persistence.NewDB(cfg.Platform.Database.URL)
 			if err != nil {
