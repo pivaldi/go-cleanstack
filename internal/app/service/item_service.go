@@ -8,18 +8,15 @@ import (
 
 	"github.com/pivaldi/go-cleanstack/internal/domain/entity"
 	"github.com/pivaldi/go-cleanstack/internal/domain/ports"
-	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type ItemService struct {
-	repo   ports.ItemRepository
-	logger logging.Logger
+	repo ports.ItemRepository
 }
 
-func NewItemService(repo ports.ItemRepository, logger logging.Logger) *ItemService {
+func NewItemService(repo ports.ItemRepository) *ItemService {
 	return &ItemService{
-		repo:   repo,
-		logger: logger,
+		repo: repo,
 	}
 }
 

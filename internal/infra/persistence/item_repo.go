@@ -7,8 +7,6 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-
-	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type itemRow struct {
@@ -21,14 +19,12 @@ type itemRow struct {
 // ItemRepo is the infrastructure implementation
 // It works only with DTOs and has NO dependency on domain
 type ItemRepo struct {
-	db     *sqlx.DB
-	logger logging.Logger
+	db *sqlx.DB
 }
 
-func NewItemRepo(db *sqlx.DB, logger logging.Logger) *ItemRepo {
+func NewItemRepo(db *sqlx.DB) *ItemRepo {
 	return &ItemRepo{
-		db:     db,
-		logger: logger,
+		db: db,
 	}
 }
 

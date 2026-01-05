@@ -11,19 +11,17 @@ import (
 	"github.com/pivaldi/go-cleanstack/internal/platform/reqid"
 )
 
-type Interceptors struct {
-	Log logging.Logger
-}
+type Interceptors struct{}
 
 func (i Interceptors) All() []connect.Interceptor {
 	return []connect.Interceptor{
-		requestIDInterceptor{i.Log},
-		loggingInterceptor{i.Log},
+		requestIDInterceptor{},
+		loggingInterceptor{},
 		errorHeaderInterceptor{},
 	}
 }
 
-type requestIDInterceptor struct{ log logging.Logger }
+type requestIDInterceptor struct{}
 
 func (in requestIDInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -64,7 +62,7 @@ func (in errorHeaderInterceptor) WrapStreamingHandler(next connect.StreamingHand
 	return next
 }
 
-type loggingInterceptor struct{ log logging.Logger }
+type loggingInterceptor struct{}
 
 func (in loggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -82,13 +80,13 @@ func (in loggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc
 		}
 
 		if err == nil {
-			in.log.Info("rpc", fields...)
+			logging.GetLogger().Info("rpc", fields...)
 			return res, nil
 		}
 
 		ae := apperr.As(err)
 		if ae == nil {
-			in.log.Error("rpc_error", append(fields,
+			logging.GetLogger().Error("rpc_error", append(fields,
 				logging.String("error", err.Error()),
 			)...)
 
@@ -116,7 +114,7 @@ func (in loggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc
 			fields = append(fields, logging.String("stack", ae.Stack))
 		}
 
-		in.log.Error("rpc_error", fields...)
+		logging.GetLogger().Error("rpc_error", fields...)
 
 		return res, err
 	}

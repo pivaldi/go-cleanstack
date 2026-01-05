@@ -10,3 +10,6 @@
 
 * Make config.Load and config.Config private
 * Use config.GetConfig() instead and panic if load fails
+
+## GraphQL
+- See https://github.com/99designs/gqlgen

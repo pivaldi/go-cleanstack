@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/pivaldi/go-cleanstack/internal/domain/entity"
-	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type MockItemRepository struct {
@@ -40,8 +39,7 @@ func (m *MockItemRepository) Delete(ctx context.Context, id string) error {
 
 func TestItemService_CreateItem_Success(t *testing.T) {
 	mockRepo := new(MockItemRepository)
-	logger := logging.NewNop()
-	svc := NewItemService(mockRepo, logger)
+	svc := NewItemService(mockRepo)
 
 	mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*entity.Item")).Return(nil)
 
@@ -55,8 +53,7 @@ func TestItemService_CreateItem_Success(t *testing.T) {
 
 func TestItemService_CreateItem_ValidationError(t *testing.T) {
 	mockRepo := new(MockItemRepository)
-	logger := logging.NewNop()
-	svc := NewItemService(mockRepo, logger)
+	svc := NewItemService(mockRepo)
 
 	item, err := svc.CreateItem(context.Background(), "", "Description")
 

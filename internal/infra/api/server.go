@@ -20,26 +20,24 @@ const defaultTimeout = 30 * time.Second
 type Server struct {
 	port        int
 	itemService *service.ItemService
-	logger      logging.Logger
 }
 
-func NewServer(port int, itemService *service.ItemService, logger logging.Logger) *Server {
+func NewServer(port int, itemService *service.ItemService) *Server {
 	return &Server{
 		port:        port,
 		itemService: itemService,
-		logger:      logger,
 	}
 }
 
 func (s *Server) Start() error {
 	mux := http.NewServeMux()
 
-	itemHandler := handler.NewItemHandler(s.itemService, s.logger)
+	itemHandler := handler.NewItemHandler(s.itemService)
 	path, h := cleanstackv1connect.NewItemServiceHandler(itemHandler)
 	mux.Handle(path, h)
 
 	addr := fmt.Sprintf(":%d", s.port)
-	s.logger.Info("starting HTTP server", logging.String("address", addr))
+	logging.GetLogger().Info("starting HTTP server", logging.String("address", addr))
 
 	h2server := &http2.Server{
 		IdleTimeout:      defaultTimeout,

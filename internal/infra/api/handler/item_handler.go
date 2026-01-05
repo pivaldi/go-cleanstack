@@ -8,18 +8,15 @@ import (
 	"github.com/pivaldi/go-cleanstack/internal/app/service"
 	cleanstackv1 "github.com/pivaldi/go-cleanstack/internal/infra/api/gen/cleanstack/v1"
 	"github.com/pivaldi/go-cleanstack/internal/infra/api/gen/cleanstack/v1/cleanstackv1connect"
-	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 )
 
 type ItemHandler struct {
 	service *service.ItemService
-	logger  logging.Logger
 }
 
-func NewItemHandler(svc *service.ItemService, logger logging.Logger) *ItemHandler {
+func NewItemHandler(svc *service.ItemService) *ItemHandler {
 	return &ItemHandler{
 		service: svc,
-		logger:  logger,
 	}
 }
 

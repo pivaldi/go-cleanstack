@@ -12,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/pivaldi/go-cleanstack/internal/infra/config"
 	"github.com/pivaldi/go-cleanstack/internal/infra/persistence/migrations"
 	stringpkg "github.com/pivaldi/go-cleanstack/pkg/string"
 	"github.com/pressly/goose/v3"
@@ -39,16 +40,16 @@ func SetMigrationsDir(dir string) {
 }
 
 // NewMigrateCmd creates the migrate command with subcommands.
-func NewMigrateCmd() *cobra.Command {
+func NewMigrateCmd(cfg *config.Config) *cobra.Command {
 	migrateCmd := &cobra.Command{
 		Use:   "migrate",
 		Short: "Database migration commands",
 	}
 
-	migrateCmd.AddCommand(newMigrateUpCmd())
-	migrateCmd.AddCommand(newMigrateDownCmd())
-	migrateCmd.AddCommand(newMigrateStatusCmd())
-	migrateCmd.AddCommand(newMigrateVersionCmd())
+	migrateCmd.AddCommand(newMigrateUpCmd(cfg))
+	migrateCmd.AddCommand(newMigrateDownCmd(cfg))
+	migrateCmd.AddCommand(newMigrateStatusCmd(cfg))
+	migrateCmd.AddCommand(newMigrateVersionCmd(cfg))
 	migrateCmd.AddCommand(newMigrateCreateCmd())
 
 	// Set verbose mode to show SQL
@@ -57,13 +58,13 @@ func NewMigrateCmd() *cobra.Command {
 	return migrateCmd
 }
 
-func newMigrateUpCmd() *cobra.Command {
+func newMigrateUpCmd(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "up",
 		Short: "Run all pending migrations",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
-			db, err := getDBConnection()
+			db, err := getDBConnection(cfg)
 			if err != nil {
 				return err
 			}
@@ -87,13 +88,13 @@ func newMigrateUpCmd() *cobra.Command {
 	}
 }
 
-func newMigrateDownCmd() *cobra.Command {
+func newMigrateDownCmd(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "down",
 		Short: "Rollback the last migration",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
-			db, err := getDBConnection()
+			db, err := getDBConnection(cfg)
 			if err != nil {
 				return err
 			}
@@ -125,13 +126,13 @@ func newMigrateDownCmd() *cobra.Command {
 	}
 }
 
-func newMigrateStatusCmd() *cobra.Command {
+func newMigrateStatusCmd(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
 		Short: "Show migration status",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
-			db, err := getDBConnection()
+			db, err := getDBConnection(cfg)
 			if err != nil {
 				return err
 			}
@@ -147,13 +148,13 @@ func newMigrateStatusCmd() *cobra.Command {
 	}
 }
 
-func newMigrateVersionCmd() *cobra.Command {
+func newMigrateVersionCmd(cfg *config.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Show current database version",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			ctx := context.Background()
-			db, err := getDBConnection()
+			db, err := getDBConnection(cfg)
 			if err != nil {
 				return err
 			}
@@ -280,7 +281,7 @@ func createMigrationFile(dir, description string, migrationType migrationType) (
 }
 
 // getDBConnection returns a database connection.
-func getDBConnection() (*sql.DB, error) {
+func getDBConnection(cfg *config.Config) (*sql.DB, error) {
 	if cfg == nil {
 		return nil, errors.New("configuration not loaded")
 	}

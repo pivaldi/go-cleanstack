@@ -1,14 +1,15 @@
-package logging
+package zap
 
 import (
 	"fmt"
 
+	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 // NewProduction creates a production logger (JSON format) with specified level
-func NewProduction(level string) (Logger, error) {
+func NewProduction(level string) (logging.Logger, error) {
 	zapLevel, err := parseLevel(level)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,7 @@ func NewProduction(level string) (Logger, error) {
 }
 
 // NewDevelopment creates a development logger (console format) with specified level
-func NewDevelopment(level string) (Logger, error) {
+func NewDevelopment(level string) (logging.Logger, error) {
 	zapLevel, err := parseLevel(level)
 	if err != nil {
 		return nil, err
@@ -54,7 +55,7 @@ func NewDevelopment(level string) (Logger, error) {
 // NewLogger creates a logger based on environment and level
 // env: "development" or "production"
 // level: "debug", "info", "warn", "error"
-func NewLogger(env, level string) (Logger, error) {
+func NewLogger(env, level string) (logging.Logger, error) {
 	if env == "development" {
 		return NewDevelopment(level)
 	}
@@ -63,7 +64,7 @@ func NewLogger(env, level string) (Logger, error) {
 }
 
 // NewNop returns a no-op logger for testing
-func NewNop() Logger {
+func NewNop() logging.Logger {
 	nopLogger := zap.NewNop()
 	return &zapLogger{
 		logger:        nopLogger,
@@ -72,7 +73,7 @@ func NewNop() Logger {
 }
 
 // Must panics if logger creation fails
-func Must(logger Logger, err error) Logger {
+func Must(logger logging.Logger, err error) logging.Logger {
 	if err != nil {
 		panic(fmt.Sprintf("failed to create logger: %v", err))
 	}
