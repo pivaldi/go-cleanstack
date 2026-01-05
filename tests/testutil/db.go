@@ -18,7 +18,7 @@ func SetupTestDB(databaseURL string) (*sqlx.DB, error) {
 
 	// Run migrations using Goose
 	ctx := context.Background()
-	migrationsPath := "../../internal/infra/persistence/migrations"
+	migrationsPath := "../../internal/app/app1/infra/persistence/migrations"
 
 	if err := goose.UpContext(ctx, db.DB, migrationsPath); err != nil {
 		return nil, err

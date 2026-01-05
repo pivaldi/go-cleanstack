@@ -3,11 +3,11 @@
 ## This file is used for staging purposes only.
 ## It should not be committed to version control.
 
-[server]
+[platform.server]
 port = 4225
 
-[database]
+[platform.database]
 url = "postgres://user:pass@cleanstack-db-staging:5432/cleanstack_staging?sslmode=require"
 
-[log]
+[platform.log]
 level = "info"

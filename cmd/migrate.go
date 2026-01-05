@@ -12,8 +12,8 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/pivaldi/go-cleanstack/internal/infra/config"
-	"github.com/pivaldi/go-cleanstack/internal/infra/persistence/migrations"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/persistence/migrations"
+	"github.com/pivaldi/go-cleanstack/internal/common/platform/config"
 	stringpkg "github.com/pivaldi/go-cleanstack/pkg/string"
 	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ const (
 )
 
 const (
-	defaultMigrationsDir = "internal/infra/persistence/migrations"
+	defaultMigrationsDir = "internal/app/app1/infra/persistence/migrations"
 )
 
 var (
@@ -40,7 +40,7 @@ func SetMigrationsDir(dir string) {
 }
 
 // NewMigrateCmd creates the migrate command with subcommands.
-func NewMigrateCmd(cfg *config.Config) *cobra.Command {
+func NewMigrateCmd(cfg *config.Platform) *cobra.Command {
 	migrateCmd := &cobra.Command{
 		Use:   "migrate",
 		Short: "Database migration commands",
@@ -58,7 +58,7 @@ func NewMigrateCmd(cfg *config.Config) *cobra.Command {
 	return migrateCmd
 }
 
-func newMigrateUpCmd(cfg *config.Config) *cobra.Command {
+func newMigrateUpCmd(cfg *config.Platform) *cobra.Command {
 	return &cobra.Command{
 		Use:   "up",
 		Short: "Run all pending migrations",
@@ -88,7 +88,7 @@ func newMigrateUpCmd(cfg *config.Config) *cobra.Command {
 	}
 }
 
-func newMigrateDownCmd(cfg *config.Config) *cobra.Command {
+func newMigrateDownCmd(cfg *config.Platform) *cobra.Command {
 	return &cobra.Command{
 		Use:   "down",
 		Short: "Rollback the last migration",
@@ -126,7 +126,7 @@ func newMigrateDownCmd(cfg *config.Config) *cobra.Command {
 	}
 }
 
-func newMigrateStatusCmd(cfg *config.Config) *cobra.Command {
+func newMigrateStatusCmd(cfg *config.Platform) *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
 		Short: "Show migration status",
@@ -148,7 +148,7 @@ func newMigrateStatusCmd(cfg *config.Config) *cobra.Command {
 	}
 }
 
-func newMigrateVersionCmd(cfg *config.Config) *cobra.Command {
+func newMigrateVersionCmd(cfg *config.Platform) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Show current database version",
@@ -281,7 +281,7 @@ func createMigrationFile(dir, description string, migrationType migrationType) (
 }
 
 // getDBConnection returns a database connection.
-func getDBConnection(cfg *config.Config) (*sql.DB, error) {
+func getDBConnection(cfg *config.Platform) (*sql.DB, error) {
 	if cfg == nil {
 		return nil, errors.New("configuration not loaded")
 	}

@@ -130,7 +130,7 @@ This codebase enforces strict architectural boundaries. Understanding the depend
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ Infrastructure Layer (., internal/infra/)             │
+│ Infrastructure Layer (., internal/app/app1/infra/)             │
 │ - API handlers, HTTP server, database, config, CLI      │
 │ - Depends on: Application layer (via service imports)   │
 │ - Implements: Domain ports (via adapters)               │
@@ -146,7 +146,7 @@ This codebase enforces strict architectural boundaries. Understanding the depend
                      │
                      ↓
 ┌──────────────────────────────────────────────────────────┐
-│ Domain Layer (internal/domain/)                          │
+│ Domain Layer (internal/app/app1/domain/)                          │
 │ - Entities (pure business logic)                         │
 │ - Ports (interfaces defining infrastructure needs)       │
 │ - Depends on: NOTHING (zero external dependencies)       │
@@ -164,7 +164,7 @@ This codebase enforces strict architectural boundaries. Understanding the depend
 
 This codebase uses a strict separation to maintain clean boundaries:
 
-**Infrastructure DTOs** (`internal/infra/persistence/models.go`):
+**Infrastructure DTOs** (`internal/app/app1/infra/persistence/models.go`):
 ```go
 type ItemDTO struct {
     ID          string
@@ -174,7 +174,7 @@ type ItemDTO struct {
 }
 ```
 
-**Domain Entities** (`internal/domain/entity/item.go`):
+**Domain Entities** (`internal/app/app1/domain/entity/item.go`):
 ```go
 type Item struct {
     ID          string
@@ -250,7 +250,7 @@ All test files should:
 
 ### Common Test Patterns
 ```go
-import "github.com/pivaldi/go-cleanstack/internal/platform/logging"
+import "github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 
 // Service layer unit test (uses mock repo)
 mockRepo := new(MockItemRepository)
@@ -288,41 +288,41 @@ The project uses **golangci-lint v2.7+** with strict rules:
 ## Protocol Buffers & Code Generation
 
 ### Proto Files Location
-`internal/infra/api/proto/cleanstack/v1/item.proto`
+`internal/app/app1/infra/api/proto/cleanstack/v1/item.proto`
 
 ### Generating Code
 ```bash
 just generate-api
 # or
-cd internal/infra/api && buf generate
+cd internal/app/app1/infra/api && buf generate
 ```
 
 This generates:
 - Go structs from protobuf messages
-- Connect RPC service interfaces in `internal/infra/api/gen/`
+- Connect RPC service interfaces in `internal/app/app1/infra/api/gen/`
 
 ### After Regenerating
-Update handlers in `internal/infra/api/handler/` to match new service interfaces.
+Update handlers in `internal/app/app1/infra/api/handler/` to match new service interfaces.
 
 ## Common Development Patterns
 
 ### Adding a New Domain Entity
-1. Create entity in `internal/domain/entity/` (pure logic, no dependencies)
+1. Create entity in `internal/app/app1/domain/entity/` (pure logic, no dependencies)
 2. Add validation methods to entity (e.g., `Validate()`)
-3. Define repository port in `internal/domain/ports/`
-4. Create DTO in `internal/infra/persistence/models.go`
-5. Implement repository in `internal/infra/persistence/` (uses DTOs)
+3. Define repository port in `internal/app/app1/domain/ports/`
+4. Create DTO in `internal/app/app1/infra/persistence/models.go`
+5. Implement repository in `internal/app/app1/infra/persistence/` (uses DTOs)
 6. Create adapter in `internal/app/adapters/` (converts entity ↔ DTO)
 7. Add service in `internal/app/service/` (uses port interface)
-8. Create migration in `internal/infra/persistence/migrations/`
-9. Add API handler in `internal/infra/api/handler/`
+8. Create migration in `internal/app/app1/infra/persistence/migrations/`
+9. Add API handler in `internal/app/app1/infra/api/handler/`
 10. Update protobuf and regenerate code
 
 ### Adding a Logger to a Component
 Loggers are passed via dependency injection:
 
 ```go
-import "github.com/pivaldi/go-cleanstack/internal/platform/logging"
+import "github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 
 // Add logger field to struct
 type MyService struct {
@@ -345,7 +345,7 @@ s.logger.Info("operation started",
 
 ### Logging Abstraction Layer
 
-The application uses a custom logging abstraction in `internal/platform/logging/` that hides the underlying logging implementation (currently zap):
+The application uses a custom logging abstraction in `internal/common/platform/logging/` that hides the underlying logging implementation (currently zap):
 
 **Key Benefits:**
 - Swappable logging backend without changing application code
@@ -404,13 +404,13 @@ logger := logging.Must(logging.NewProduction("info"))
 - Use `fmt.Errorf("context: %w", err)` to maintain error chain
 
 ### Database Connections
-- Connection pool configured in `internal/infra/persistence/db.go`
+- Connection pool configured in `internal/app/app1/infra/persistence/db.go`
 - Max open connections: 25 (constant `maxOpenConns`)
 - Max idle connections: 5 (constant `maxIdleConns`)
 - Migrations managed by Goose v3 (timestamp-based)
 
 ### HTTP Server Configuration
-The server in `internal/infra/api/server.go` requires proper timeout configuration for security:
+The server in `internal/app/app1/infra/api/server.go` requires proper timeout configuration for security:
 ```go
 httpServer := &http.Server{
     Addr:         addr,

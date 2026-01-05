@@ -238,9 +238,9 @@ go test ./...
 ```
 
 Unit tests are co-located with the code they test:
-- `internal/domain/entity/item_test.go` - Domain entity tests
+- `internal/app/app1/domain/entity/item_test.go` - Domain entity tests
 - `internal/app/service/item_service_test.go` - Service layer tests
-- `internal/infra/config/config_test.go` - Configuration tests
+- `internal/app/app1/infra/config/config_test.go` - Configuration tests
 
 ### Integration Tests
 
@@ -332,7 +332,7 @@ environment:
 
 ## Code Generation
 
-Protocol Buffer definitions are in `internal/infra/api/proto/cleanstack/v1/`. To regenerate code:
+Protocol Buffer definitions are in `internal/app/app1/infra/api/proto/cleanstack/v1/`. To regenerate code:
 
 ```bash
 just generate-api
@@ -341,7 +341,7 @@ just generate-api
 This uses [buf](https://buf.build) to generate:
 - Go structs from protobuf messages
 - Connect RPC service interfaces and handlers
-- Generated code is output to `internal/infra/api/gen/`
+- Generated code is output to `internal/app/app1/infra/api/gen/`
 
 ## Linting
 
@@ -360,7 +360,7 @@ This is a template/skeleton project demonstrating architecture patterns. To use 
 
 1. Fork or clone the repository
 2. Update `go.mod` with your module name
-3. Update protobuf package names in `internal/infra/api/proto/`
+3. Update protobuf package names in `internal/app/app1/infra/api/proto/`
 4. Implement your domain entities and business logic
 5. Add corresponding service methods and API endpoints
 

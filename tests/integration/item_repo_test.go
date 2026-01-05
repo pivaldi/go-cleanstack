@@ -10,9 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pivaldi/go-cleanstack/internal/domain/entity"
-	"github.com/pivaldi/go-cleanstack/internal/infra/persistence"
-	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/entity"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/persistence"
 	"github.com/pivaldi/go-cleanstack/tests/testutil"
 )
 
@@ -29,8 +28,7 @@ func TestItemRepo_CRUD(t *testing.T) {
 	require.NoError(t, err)
 	defer db.Close()
 
-	logger := logging.NewNop()
-	repo := persistence.NewItemRepo(db, logger)
+	repo := persistence.NewItemRepo(db)
 
 	t.Run("Create and GetByID", func(t *testing.T) {
 		testutil.CleanupTestDB(db)

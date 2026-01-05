@@ -12,7 +12,7 @@ dev:
 [doc('API Code Generation')]
 [group('generate')]
 generate-api:
-    cd internal/infra/api && buf generate
+    cd internal/app/app1/infra/api && buf generate
 
 [doc('unit tests')]
 [group('test')]

@@ -3,8 +3,8 @@
 ## This file is used for production purposes only.
 ## It should not be committed to version control.
 
-[database]
+[platform.database]
 url = "postgres://user:pass@cleanstack-db-production:5432/cleanstack_production?sslmode=require"
 
-[log]
+[platform.log]
 level = "warn"

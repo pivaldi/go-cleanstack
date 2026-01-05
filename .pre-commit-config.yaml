@@ -29,13 +29,13 @@ repos:
 
       - id: buf-lint
         name: buf lint
-        entry: bash -c 'cd internal/infra/api && buf lint'
+        entry: bash -c 'cd internal/app/app1/infra/api && buf lint'
         language: system
         pass_filenames: false
 
       - id: buf-generate
         name: buf generate
-        entry: bash -c 'cd internal/infra/api && buf generate'
+        entry: bash -c 'cd internal/app/app1/infra/api && buf generate'
         language: system
         files: '\.proto$'
         pass_filenames: false

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/pivaldi/go-cleanstack/internal/infra/persistence/migrations"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/persistence/migrations"
 )
 
 const sqlMigrationTemplate = `-- +goose Up

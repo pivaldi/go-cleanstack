@@ -12,13 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/adapters"
-	"github.com/pivaldi/go-cleanstack/internal/app/service"
-	cleanstackv1 "github.com/pivaldi/go-cleanstack/internal/infra/api/gen/cleanstack/v1"
-	"github.com/pivaldi/go-cleanstack/internal/infra/api/gen/cleanstack/v1/cleanstackv1connect"
-	"github.com/pivaldi/go-cleanstack/internal/infra/api/handler"
-	"github.com/pivaldi/go-cleanstack/internal/infra/persistence"
-	"github.com/pivaldi/go-cleanstack/internal/platform/logging"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/adapters"
+	cleanstackv1 "github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/cleanstack/v1"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/cleanstack/v1/cleanstackv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/handler"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/persistence"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/service"
 	"github.com/pivaldi/go-cleanstack/tests/testutil"
 )
 
@@ -36,11 +35,10 @@ func TestItemAPI_E2E(t *testing.T) {
 	defer db.Close()
 
 	// Wire up dependencies
-	logger := logging.NewNop()
-	infraRepo := persistence.NewItemRepo(db, logger)
+	infraRepo := persistence.NewItemRepo(db)
 	itemRepo := adapters.NewItemRepositoryAdapter(infraRepo)
-	itemService := service.NewItemService(itemRepo, logger)
-	itemHandler := handler.NewItemHandler(itemService, logger)
+	itemService := service.NewItemService(itemRepo)
+	itemHandler := handler.NewItemHandler(itemService)
 
 	// Create test server
 	mux := http.NewServeMux()

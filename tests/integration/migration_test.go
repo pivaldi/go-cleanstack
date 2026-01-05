@@ -54,7 +54,7 @@ func TestMigrations(t *testing.T) {
 	defer db.Close()
 
 	// Get migrations path
-	migrationsPath := filepath.Join("..", "..", "internal", "infra", "persistence", "migrations")
+	migrationsPath := filepath.Join("..", "..", "internal", "app", "app1", "infra", "persistence", "migrations")
 
 	// Test: Apply migrations
 	t.Run("apply migrations", func(t *testing.T) {

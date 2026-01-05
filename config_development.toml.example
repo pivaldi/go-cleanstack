@@ -3,5 +3,5 @@
 ## This file is used for development purposes only.
 ## It should not be committed to version control.
 
-[database]
+[platform.database]
 url = "postgres://user:pass@localhost:5435/cleanstack_development?sslmode=disable"
