@@ -3,7 +3,23 @@
 ## THIS IS A WORK IN PROGRESS !
 ## DO NOT USE IN PRODUCTION !
 
-A production-ready Go multi-module applications demonstrating Clean Architecture principles with Domain-Driven Design and Hexagonal Architecture governed by an unique CLI projet manager.
+A production-ready **Go multi-module workspace** demonstrating Clean Architecture principles with Domain-Driven Design and Hexagonal Architecture, governed by a unified CLI project manager.
+
+## Go Workspace Architecture
+
+This project uses **Go workspaces** (`go.work`) to manage multiple independent modules:
+
+| Module | Path | Purpose |
+|--------|------|---------|
+| Root | `/` | CLI orchestrator, aggregates sub-applications |
+| Common | `/internal/common` | Shared platform utilities (logging, config, errors) |
+| App1 | `/internal/app/app1` | First application with its own domain and infrastructure |
+
+**Benefits:**
+- Independent versioning and testing per module
+- Clear boundaries between applications
+- Shared utilities without code duplication
+- Easy to add new applications (app2, app3, etc.)
 
 ## Features
 
@@ -19,30 +35,34 @@ A production-ready Go multi-module applications demonstrating Clean Architecture
 
 ## Architecture
 
-This project follows Hexagonal Architecture principles with clear boundaries:
+This project follows Hexagonal Architecture principles with clear boundaries, organized as a Go workspace:
 
 ```
-domain/     - Pure business logic and entities (no external dependencies)
-  ├── entity/    - Domain entities with business rules
-  └── ports/     - Interfaces defining what domain needs
+/                           - Root module (CLI orchestrator)
+├── main.go                 - Entry point, aggregates sub-applications
+├── cmd/                    - Root CLI commands (migrate)
 
-app/        - Application orchestration layer
-  ├── service/   - Use cases and business workflows
-  └── adapters/  - Bridges between domain and infrastructure
+/internal/common/           - Common module (shared utilities)
+├── platform/
+│   ├── logging/           - Logger abstraction (zap-based)
+│   ├── config/            - Generic configuration loader
+│   ├── apperr/            - Application error types
+│   ├── clierr/            - CLI error handling
+│   └── reqid/             - Request ID utilities
+└── transport/
+    └── connectx/          - Connect RPC interceptors and error handling
 
-infra/      - External concerns and frameworks
-  ├── api/       - Connect RPC handlers, protobuf, and HTTP server
-  ├── config/    - Configuration loading (Viper)
-  └── persistence/ - Database access with DTOs and migrations
-
-platform/   - Cross-cutting infrastructure utilities
-  ├── logging/   - Zap logger factory
-  ├── apperr/    - Application error types
-  ├── clierr/    - CLI error handling
-  └── reqid/     - Request ID utilities
-
-transport/  - Transport layer utilities
-  └── connectx/  - Connect RPC interceptors and error handling
+/internal/app/app1/         - App1 module (first application)
+├── domain/                - Pure business logic (no external dependencies)
+│   ├── entity/            - Domain entities with business rules
+│   └── ports/             - Interfaces defining what domain needs
+├── service/               - Use cases and business workflows
+├── adapters/              - Bridges between domain and infrastructure
+├── config/                - App-specific configuration
+├── cmd/                   - App CLI commands (serve, version)
+└── infra/                 - External concerns and frameworks
+    ├── api/               - Connect RPC handlers, protobuf, HTTP server
+    └── persistence/       - Database access with DTOs and migrations
 ```
 
 ### Dependency Rules
@@ -56,73 +76,68 @@ transport/  - Transport layer utilities
 
 ```
 .
-├── main.go                      # Application entry point
-├── cmd/                         # CLI commands (Cobra)
-│   ├── root.go                 # Root command with logger initialization
-│   ├── serve.go                # HTTP server command
-│   ├── migrate.go              # Database migration commands
-│   └── version.go              # Version command
+├── go.work                       # Go workspace definition
+├── go.mod                        # Root module
+├── main.go                       # Entry point (CLI orchestrator)
+├── cmd/                          # Root CLI commands
+│   └── migrate.go               # Database migration commands
+│
 ├── internal/
-│   ├── domain/                  # Core business logic
-│   │   ├── entity/             # Domain entities
-│   │   │   ├── item.go
-│   │   │   └── item_test.go
-│   │   └── ports/              # Port interfaces
-│   │       └── repository.go
-│   ├── app/                     # Application layer
-│   │   ├── service/            # Use cases
-│   │   │   ├── item_service.go
-│   │   │   └── item_service_test.go
-│   │   └── adapters/           # Domain-to-infra adapters
-│   │       └── item_repo_adapter.go
-│   ├── infra/                   # Infrastructure layer
-│   │   ├── api/                # Connect RPC API
-│   │   │   ├── proto/cleanstack/v1/
-│   │   │   │   └── item.proto
-│   │   │   ├── gen/            # Generated protobuf code
-│   │   │   │   └── cleanstack/v1/
-│   │   │   ├── handler/
-│   │   │   │   └── item_handler.go
-│   │   │   ├── interceptor/    # HTTP interceptors
-│   │   │   └── server.go
-│   │   ├── config/             # Configuration
-│   │   │   ├── config.go
-│   │   │   └── config_test.go
-│   │   └── persistence/        # Database access
-│   │       ├── db.go
-│   │       ├── models.go       # DTOs
-│   │       ├── item_repo.go
-│   │       └── migrations/
-│   │           ├── 000001_create_items_table.up.sql
-│   │           └── 000001_create_items_table.down.sql
-│   ├── platform/                # Cross-cutting utilities
-│   │   ├── logging/            # Zap logger factory
-│   │   │   └── zap.go
-│   │   ├── apperr/             # Application errors
-│   │   ├── clierr/             # CLI error handling
-│   │   └── reqid/              # Request ID utilities
-│   └── transport/               # Transport layer
-│       └── connectx/           # Connect RPC utilities
-│           ├── interceptors.go
-│           └── connect_errors.go
+│   ├── common/                   # Common module (go.mod)
+│   │   ├── platform/            # Cross-cutting utilities
+│   │   │   ├── logging/         # Logger abstraction
+│   │   │   ├── config/          # Generic config loader
+│   │   │   ├── apperr/          # Application errors
+│   │   │   ├── clierr/          # CLI error handling
+│   │   │   └── reqid/           # Request ID utilities
+│   │   └── transport/           # Transport utilities
+│   │       └── connectx/        # Connect RPC interceptors
+│   │
+│   └── app/
+│       └── app1/                 # App1 module (go.mod)
+│           ├── main.go          # App entry point (standalone use)
+│           ├── cmd/             # App CLI commands
+│           │   ├── root.go      # Root command with logger init
+│           │   ├── serve.go     # HTTP server command
+│           │   └── version.go   # Version command
+│           ├── config/          # App-specific configuration
+│           │   └── config.go
+│           ├── domain/          # Core business logic
+│           │   ├── entity/      # Domain entities
+│           │   │   └── item.go
+│           │   └── ports/       # Port interfaces
+│           │       └── repository.go
+│           ├── service/         # Use cases
+│           │   └── item_service.go
+│           ├── adapters/        # Domain-to-infra adapters
+│           │   └── item_repo_adapter.go
+│           └── infra/           # Infrastructure layer
+│               ├── api/         # Connect RPC API
+│               │   ├── proto/   # Protobuf definitions
+│               │   ├── gen/     # Generated code
+│               │   ├── handler/ # Request handlers
+│               │   └── server.go
+│               └── persistence/ # Database access
+│                   ├── db.go
+│                   ├── models.go
+│                   ├── item_repo.go
+│                   └── migrations/
+│
 ├── tests/
-│   ├── integration/             # Integration tests
-│   │   └── item_repo_test.go
-│   ├── e2e/                     # End-to-end tests
-│   │   └── api_test.go
-│   └── testutil/                # Test utilities
-│       ├── containers.go
-│       └── db.go
-├── config_default.toml          # Default configuration
-├── docker-compose.yml           # Docker orchestration
-├── Dockerfile                   # Production container
-├── justfile                     # Task runner
-└── .golangci.yml                # Linter configuration
+│   ├── integration/              # Integration tests
+│   ├── e2e/                      # End-to-end tests
+│   └── testutil/                 # Test utilities
+│
+├── config_default.toml           # Default configuration
+├── docker-compose.yml            # Docker orchestration
+├── Dockerfile                    # Production container
+├── justfile                      # Task runner
+└── .golangci.yml                 # Linter configuration
 ```
 
 ## Prerequisites
 
-- Go 1.24 or higher (optional if the app is built from Docker)
+- Go 1.25 or higher (optional if the app is built from Docker)
 - PostgreSQL 16 or higher
 - Docker and docker-compose (for testing and **local development**)
 - Node.js/npm (for **local development**)
@@ -239,8 +254,8 @@ go test ./...
 
 Unit tests are co-located with the code they test:
 - `internal/app/app1/domain/entity/item_test.go` - Domain entity tests
-- `internal/app/service/item_service_test.go` - Service layer tests
-- `internal/app/app1/infra/config/config_test.go` - Configuration tests
+- `internal/app/app1/service/item_service_test.go` - Service layer tests
+- `internal/common/platform/config/config_test.go` - Configuration tests
 
 ### Integration Tests
 
@@ -359,10 +374,12 @@ Pre-commit hooks are configured to run linting automatically.
 This is a template/skeleton project demonstrating architecture patterns. To use it as a starting point:
 
 1. Fork or clone the repository
-2. Update `go.mod` with your module name
-3. Update protobuf package names in `internal/app/app1/infra/api/proto/`
-4. Implement your domain entities and business logic
-5. Add corresponding service methods and API endpoints
+2. Update module names in `go.mod`, `go.work`, and all sub-module `go.mod` files
+3. Update `replace` directives in all `go.mod` files to match your module path
+4. Update protobuf package names in `internal/app/app1/infra/api/proto/`
+5. Implement your domain entities and business logic
+6. Add corresponding service methods and API endpoints
+7. To add a new application, create a new module under `internal/app/` (see CLAUDE.md for detailed steps)
 
 ## Architecture Highlights
 

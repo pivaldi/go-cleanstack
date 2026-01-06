@@ -4,7 +4,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a production-ready Go application skeleton demonstrating **Clean Architecture** with **Hexagonal Architecture** (Ports & Adapters pattern) and **Domain-Driven Design**. The project uses Connect RPC (built on protobuf and HTTP/2) for the API layer.
+This is a production-ready **Go multi-module workspace** demonstrating **Clean Architecture** with **Hexagonal Architecture** (Ports & Adapters pattern) and **Domain-Driven Design**. The project uses Connect RPC (built on protobuf and HTTP/2) for the API layer.
+
+## Go Workspace Architecture
+
+The project uses **Go workspaces** (`go.work`) to manage multiple modules that can be developed, tested, and versioned independently while sharing common code.
+
+### Module Structure
+
+```
+go.work                          # Workspace definition
+├── .                            # Root module (CLI orchestrator)
+├── ./internal/common            # Common module (shared platform utilities)
+└── ./internal/app/app1          # App1 module (first application)
+```
+
+### Modules
+
+| Module | Path | Purpose |
+|--------|------|---------|
+| `github.com/pivaldi/go-cleanstack` | `/` | Root CLI orchestrator, aggregates sub-applications |
+| `github.com/pivaldi/go-cleanstack/internal/common` | `/internal/common` | Shared platform utilities (logging, config, errors, transport) |
+| `github.com/pivaldi/go-cleanstack/internal/app/app1` | `/internal/app/app1` | First application with its own domain, services, and infrastructure |
+
+### Module Dependencies
+
+```
+Root Module (CLI)
+    ├── imports → common (platform utilities)
+    └── imports → app1 (sub-application)
+
+App1 Module
+    └── imports → common (platform utilities)
+
+Common Module
+    └── no internal dependencies (only external packages)
+```
+
+### Why Go Workspaces?
+
+1. **Independent versioning**: Each module can be versioned separately
+2. **Selective testing**: Run tests for specific modules without affecting others
+3. **Clear boundaries**: Enforces separation between applications
+4. **Scalability**: Easy to add new applications (app2, app3, etc.)
+5. **Shared utilities**: Common code in one place, used by all apps
 
 ## Essential Commands
 
@@ -129,28 +172,46 @@ Each environment runs on its own ports (4224/5435, 4225/5436, 4226/5437) without
 This codebase enforces strict architectural boundaries. Understanding the dependency flow is critical:
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│ Infrastructure Layer (., internal/app/app1/infra/)             │
-│ - API handlers, HTTP server, database, config, CLI      │
-│ - Depends on: Application layer (via service imports)   │
-│ - Implements: Domain ports (via adapters)               │
-└────────────────────┬─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ Root Module (main.go, cmd/)                                      │
+│ - CLI orchestrator, aggregates sub-applications                  │
+│ - Depends on: common (platform), app1 (sub-application)         │
+└────────────────────┬────────────────────────────────────────────┘
                      │
                      ↓
-┌──────────────────────────────────────────────────────────┐
-│ Application Layer (internal/app/)                        │
-│ - Services (use cases, business workflows)               │
-│ - Adapters (bridge domain ↔ infrastructure)             │
-│ - Depends on: Domain layer (ports only, never entities) │
-└────────────────────┬─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ App Module (internal/app/app1/)                                  │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ Infrastructure Layer (infra/, config/, cmd/)                 │ │
+│ │ - API handlers, HTTP server, database, app-specific config   │ │
+│ │ - Depends on: Application layer (via service imports)        │ │
+│ │ - Implements: Domain ports (via adapters)                    │ │
+│ └────────────────────┬────────────────────────────────────────┘ │
+│                      │                                           │
+│                      ↓                                           │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ Application Layer (service/, adapters/)                      │ │
+│ │ - Services (use cases, business workflows)                   │ │
+│ │ - Adapters (bridge domain ↔ infrastructure)                 │ │
+│ │ - Depends on: Domain layer (ports only, never entities)      │ │
+│ └────────────────────┬────────────────────────────────────────┘ │
+│                      │                                           │
+│                      ↓                                           │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │ Domain Layer (domain/)                                       │ │
+│ │ - Entities (pure business logic)                             │ │
+│ │ - Ports (interfaces defining infrastructure needs)           │ │
+│ │ - Depends on: NOTHING (zero external dependencies)           │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
                      │
                      ↓
-┌──────────────────────────────────────────────────────────┐
-│ Domain Layer (internal/app/app1/domain/)                          │
-│ - Entities (pure business logic)                         │
-│ - Ports (interfaces defining infrastructure needs)       │
-│ - Depends on: NOTHING (zero external dependencies)       │
-└──────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ Common Module (internal/common/)                                 │
+│ - platform/: logging, config, errors, request ID                 │
+│ - transport/: Connect RPC interceptors and error handling        │
+│ - Shared by all app modules                                      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Critical Architectural Rules
@@ -282,8 +343,8 @@ The project uses **golangci-lint v2.7+** with strict rules:
 - **mnd**: Magic numbers must be extracted to constants
 
 ### Go Version Requirement
-- **Go 1.24+** required (specified in go.mod)
-- golangci-lint must be built with Go 1.24+ to match project requirements
+- **Go 1.25+** required (specified in go.mod and go.work)
+- golangci-lint must be built with Go 1.25+ to match project requirements
 
 ## Protocol Buffers & Code Generation
 
@@ -306,17 +367,46 @@ Update handlers in `internal/app/app1/infra/api/handler/` to match new service i
 
 ## Common Development Patterns
 
-### Adding a New Domain Entity
+### Adding a New Domain Entity (to app1)
 1. Create entity in `internal/app/app1/domain/entity/` (pure logic, no dependencies)
 2. Add validation methods to entity (e.g., `Validate()`)
 3. Define repository port in `internal/app/app1/domain/ports/`
 4. Create DTO in `internal/app/app1/infra/persistence/models.go`
 5. Implement repository in `internal/app/app1/infra/persistence/` (uses DTOs)
-6. Create adapter in `internal/app/adapters/` (converts entity ↔ DTO)
-7. Add service in `internal/app/service/` (uses port interface)
+6. Create adapter in `internal/app/app1/adapters/` (converts entity ↔ DTO)
+7. Add service in `internal/app/app1/service/` (uses port interface)
 8. Create migration in `internal/app/app1/infra/persistence/migrations/`
 9. Add API handler in `internal/app/app1/infra/api/handler/`
 10. Update protobuf and regenerate code
+
+### Adding a New Application Module (e.g., app2)
+1. Create directory structure: `internal/app/app2/`
+2. Initialize module: `cd internal/app/app2 && go mod init github.com/pivaldi/go-cleanstack/internal/app/app2`
+3. Add `replace` directive for common module in `go.mod`:
+   ```
+   replace github.com/pivaldi/go-cleanstack/internal/common => ./../../common
+   ```
+4. Add to workspace in `go.work`:
+   ```
+   use ./internal/app/app2
+   ```
+5. Add `replace` directive in root `go.mod`:
+   ```
+   replace github.com/pivaldi/go-cleanstack/internal/app/app2 => ./internal/app/app2
+   ```
+6. Create the app structure (copy from app1):
+   - `cmd/` - CLI commands (root.go, serve.go, version.go)
+   - `config/` - App-specific configuration
+   - `domain/` - Domain entities and ports
+   - `service/` - Application services
+   - `adapters/` - Domain-to-infra adapters
+   - `infra/` - Infrastructure (API, persistence)
+   - `main.go` - App entry point (optional, for standalone use)
+7. Register in root `main.go`:
+   ```go
+   import app2Cmd "github.com/pivaldi/go-cleanstack/internal/app/app2/cmd"
+   rootCmd.AddCommand(app2Cmd.GetRootCmd())
+   ```
 
 ### Adding a Logger to a Component
 Loggers are passed via dependency injection:
@@ -430,3 +520,7 @@ httpServer := &http.Server{
 5. **Integration tests need Docker**: Integration and E2E tests use testcontainers
 6. **Protobuf changes require regeneration**: After modifying `.proto` files, run `just generate-api`
 7. **CLI commands in cmd/ package**: CLI structure changed from `package main` to `package cmd` with commands in separate files
+8. **Go workspace required**: The project uses `go.work` - always run Go commands from the root directory
+9. **Module replace directives**: Each app module needs `replace` directives for common module in its `go.mod`
+10. **Root module aggregates apps**: New applications must be registered in root `main.go` via `rootCmd.AddCommand()`
+11. **Common module has no internal deps**: The common module should never import from app modules (uni-directional dependency)
