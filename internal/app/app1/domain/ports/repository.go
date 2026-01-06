@@ -2,13 +2,18 @@ package ports
 
 import (
 	"context"
+	"errors"
 
 	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/entity"
 )
 
-type ItemRepository interface {
-	Create(ctx context.Context, item *entity.Item) error
-	GetByID(ctx context.Context, id string) (*entity.Item, error)
-	List(ctx context.Context) ([]*entity.Item, error)
-	Delete(ctx context.Context, id string) error
+var ErrUserNotFound = errors.New("user not found")
+
+type UserRepository interface {
+	Create(ctx context.Context, user *entity.User) (*entity.User, error)
+	GetByID(ctx context.Context, id int64) (*entity.User, error)
+	GetByEmail(ctx context.Context, email string) (*entity.User, error)
+	List(ctx context.Context, offset, limit int) ([]*entity.User, int64, error)
+	Update(ctx context.Context, user *entity.User) (*entity.User, error)
+	Delete(ctx context.Context, id int64) error
 }

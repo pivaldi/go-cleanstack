@@ -27,11 +27,11 @@ func NewServeCmd() *cobra.Command {
 
 			logging.GetLogger().Info("connected to database")
 
-			infraRepo := persistence.NewItemRepo(db)
-			itemRepo := adapters.NewItemRepositoryAdapter(infraRepo)
-			itemService := service.NewItemService(itemRepo)
+			infraRepo := persistence.NewUserRepo(db)
+			userRepo := adapters.NewUserRepositoryAdapter(infraRepo)
+			userService := service.NewUserService(userRepo)
 
-			server := api.NewServer(cfg.Platform.Server.Port, itemService)
+			server := api.NewServer(cfg.Platform.Server.Port, userService)
 
 			return server.Start()
 		},

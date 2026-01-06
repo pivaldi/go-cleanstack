@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/cleanstack/v1/cleanstackv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/app1/v1/app1v1connect"
 	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/handler"
 	"github.com/pivaldi/go-cleanstack/internal/app/app1/service"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
@@ -19,21 +19,21 @@ const defaultTimeout = 30 * time.Second
 
 type Server struct {
 	port        int
-	itemService *service.ItemService
+	userService *service.UserService
 }
 
-func NewServer(port int, itemService *service.ItemService) *Server {
+func NewServer(port int, userService *service.UserService) *Server {
 	return &Server{
 		port:        port,
-		itemService: itemService,
+		userService: userService,
 	}
 }
 
 func (s *Server) Start() error {
 	mux := http.NewServeMux()
 
-	itemHandler := handler.NewItemHandler(s.itemService)
-	path, h := cleanstackv1connect.NewItemServiceHandler(itemHandler)
+	userHandler := handler.NewUserHandler(s.userService)
+	path, h := app1v1connect.NewUserServiceHandler(userHandler)
 	mux.Handle(path, h)
 
 	addr := fmt.Sprintf(":%d", s.port)
