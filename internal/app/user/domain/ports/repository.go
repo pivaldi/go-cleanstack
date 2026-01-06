@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/entity"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/entity"
 )
 
 var ErrUserNotFound = errors.New("user not found")

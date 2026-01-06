@@ -12,7 +12,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/persistence/migrations"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/persistence/migrations"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/config"
 	stringpkg "github.com/pivaldi/go-cleanstack/pkg/string"
 	"github.com/pressly/goose/v3"
@@ -27,7 +27,7 @@ const (
 )
 
 const (
-	defaultMigrationsDir = "internal/app/app1/infra/persistence/migrations"
+	defaultMigrationsDir = "internal/app/user/infra/persistence/migrations"
 )
 
 var (

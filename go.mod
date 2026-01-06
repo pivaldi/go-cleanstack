@@ -9,7 +9,7 @@ tool (
 
 require (
 	github.com/lib/pq v1.10.9
-	github.com/pivaldi/go-cleanstack/internal/app/app1 v0.0.0-00010101000000-000000000000
+	github.com/pivaldi/go-cleanstack/internal/app/user v0.0.0-00010101000000-000000000000
 	github.com/pivaldi/go-cleanstack/internal/common v0.0.0-00010101000000-000000000000
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/spf13/cobra v1.10.2
@@ -76,6 +76,6 @@ require (
 	gotest.tools/gotestsum v1.13.0 // indirect
 )
 
-replace github.com/pivaldi/go-cleanstack/internal/app/app1 => ./internal/app/app1
+replace github.com/pivaldi/go-cleanstack/internal/app/user => ./internal/app/user
 
 replace github.com/pivaldi/go-cleanstack/internal/common => ./internal/common

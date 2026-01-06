@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/config"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/config"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logger/zap"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 	"github.com/spf13/cobra"
@@ -18,9 +18,9 @@ func GetRootCmd() *cobra.Command {
 	)
 
 	rootCmd := &cobra.Command{
-		Use:   "app",
-		Short: "Application",
-		Long:  "Application",
+		Use:   "user",
+		Short: "User Application",
+		Long:  "User Application",
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			cfg := config.Get()
 			if cfg == nil {

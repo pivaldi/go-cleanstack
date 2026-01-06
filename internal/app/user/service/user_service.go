@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/entity"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/ports"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/entity"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/ports"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 )
 

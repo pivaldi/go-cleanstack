@@ -6,11 +6,11 @@ import (
 
 	"connectrpc.com/connect"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/entity"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/ports"
-	app1v1 "github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/app1/v1"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/app1/v1/app1v1connect"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/service"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/entity"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/ports"
+	userv1 "github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1/userv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
 )
 
 type UserHandler struct {
@@ -21,12 +21,12 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	return &UserHandler{service: svc}
 }
 
-var _ app1v1connect.UserServiceHandler = (*UserHandler)(nil)
+var _ userv1connect.UserServiceHandler = (*UserHandler)(nil)
 
 func (h *UserHandler) CreateUser(
 	ctx context.Context,
-	req *connect.Request[app1v1.CreateUserRequest],
-) (*connect.Response[app1v1.CreateUserResponse], error) {
+	req *connect.Request[userv1.CreateUserRequest],
+) (*connect.Response[userv1.CreateUserResponse], error) {
 	role, err := entity.ParseRole(req.Msg.Role)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
@@ -46,15 +46,15 @@ func (h *UserHandler) CreateUser(
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	}
 
-	return connect.NewResponse(&app1v1.CreateUserResponse{
+	return connect.NewResponse(&userv1.CreateUserResponse{
 		User: h.entityToProto(created),
 	}), nil
 }
 
 func (h *UserHandler) GetUser(
 	ctx context.Context,
-	req *connect.Request[app1v1.GetUserRequest],
-) (*connect.Response[app1v1.GetUserResponse], error) {
+	req *connect.Request[userv1.GetUserRequest],
+) (*connect.Response[userv1.GetUserResponse], error) {
 	user, err := h.service.GetUserByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, ports.ErrUserNotFound) {
@@ -64,15 +64,15 @@ func (h *UserHandler) GetUser(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&app1v1.GetUserResponse{
+	return connect.NewResponse(&userv1.GetUserResponse{
 		User: h.entityToProto(user),
 	}), nil
 }
 
 func (h *UserHandler) GetUserByEmail(
 	ctx context.Context,
-	req *connect.Request[app1v1.GetUserByEmailRequest],
-) (*connect.Response[app1v1.GetUserByEmailResponse], error) {
+	req *connect.Request[userv1.GetUserByEmailRequest],
+) (*connect.Response[userv1.GetUserByEmailResponse], error) {
 	user, err := h.service.GetUserByEmail(ctx, req.Msg.Email)
 	if err != nil {
 		if errors.Is(err, ports.ErrUserNotFound) {
@@ -82,26 +82,26 @@ func (h *UserHandler) GetUserByEmail(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&app1v1.GetUserByEmailResponse{
+	return connect.NewResponse(&userv1.GetUserByEmailResponse{
 		User: h.entityToProto(user),
 	}), nil
 }
 
 func (h *UserHandler) ListUsers(
 	ctx context.Context,
-	req *connect.Request[app1v1.ListUsersRequest],
-) (*connect.Response[app1v1.ListUsersResponse], error) {
+	req *connect.Request[userv1.ListUsersRequest],
+) (*connect.Response[userv1.ListUsersResponse], error) {
 	users, total, err := h.service.ListUsers(ctx, int(req.Msg.Offset), int(req.Msg.Limit))
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	protoUsers := make([]*app1v1.User, len(users))
+	protoUsers := make([]*userv1.User, len(users))
 	for i, user := range users {
 		protoUsers[i] = h.entityToProto(user)
 	}
 
-	return connect.NewResponse(&app1v1.ListUsersResponse{
+	return connect.NewResponse(&userv1.ListUsersResponse{
 		Users: protoUsers,
 		Total: total,
 	}), nil
@@ -109,8 +109,8 @@ func (h *UserHandler) ListUsers(
 
 func (h *UserHandler) UpdateUser(
 	ctx context.Context,
-	req *connect.Request[app1v1.UpdateUserRequest],
-) (*connect.Response[app1v1.UpdateUserResponse], error) {
+	req *connect.Request[userv1.UpdateUserRequest],
+) (*connect.Response[userv1.UpdateUserResponse], error) {
 	user := &entity.User{ID: req.Msg.Id}
 
 	if req.Msg.Email != nil {
@@ -142,15 +142,15 @@ func (h *UserHandler) UpdateUser(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&app1v1.UpdateUserResponse{
+	return connect.NewResponse(&userv1.UpdateUserResponse{
 		User: h.entityToProto(updated),
 	}), nil
 }
 
 func (h *UserHandler) DeleteUser(
 	ctx context.Context,
-	req *connect.Request[app1v1.DeleteUserRequest],
-) (*connect.Response[app1v1.DeleteUserResponse], error) {
+	req *connect.Request[userv1.DeleteUserRequest],
+) (*connect.Response[userv1.DeleteUserResponse], error) {
 	if err := h.service.DeleteUser(ctx, req.Msg.Id); err != nil {
 		if errors.Is(err, ports.ErrUserNotFound) {
 			return nil, connect.NewError(connect.CodeNotFound, err)
@@ -159,11 +159,11 @@ func (h *UserHandler) DeleteUser(
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	return connect.NewResponse(&app1v1.DeleteUserResponse{}), nil
+	return connect.NewResponse(&userv1.DeleteUserResponse{}), nil
 }
 
-func (h *UserHandler) entityToProto(user *entity.User) *app1v1.User {
-	proto := &app1v1.User{
+func (h *UserHandler) entityToProto(user *entity.User) *userv1.User {
+	proto := &userv1.User{
 		Id:        user.ID,
 		Email:     user.Email,
 		Role:      user.Role.String(),

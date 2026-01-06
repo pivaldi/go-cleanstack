@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/cmd"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/cmd"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/clierr"
 )
 

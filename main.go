@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	app1Cmd "github.com/pivaldi/go-cleanstack/internal/app/app1/cmd"
-	app1Config "github.com/pivaldi/go-cleanstack/internal/app/app1/config"
+	userCmd "github.com/pivaldi/go-cleanstack/internal/app/user/cmd"
+	userConfig "github.com/pivaldi/go-cleanstack/internal/app/user/config"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/clierr"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/config"
 	"github.com/spf13/cobra"
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	rootCmd := newRootCmd()
-	rootCmd.AddCommand(app1Cmd.GetRootCmd())
+	rootCmd.AddCommand(userCmd.GetRootCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		clierr.ExitOnError(err, true)
@@ -61,12 +61,12 @@ func newRootCmd() *cobra.Command {
 				cfg.Log.Level = logLevel
 			}
 
-			theApp1Config, ok := any(cfg).(app1Config.Config)
+			theUserConfig, ok := any(cfg).(userConfig.Config)
 			if !ok {
-				return fmt.Errorf("can not cast %T to %T", cfg, app1Config.Config{})
+				return fmt.Errorf("can not cast %T to %T", cfg, userConfig.Config{})
 			}
 
-			app1Config.SetConfig(&theApp1Config)
+			userConfig.SetConfig(&theUserConfig)
 
 			return nil
 		},

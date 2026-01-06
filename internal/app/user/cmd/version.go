@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	appConfig "github.com/pivaldi/go-cleanstack/internal/app/app1/config"
+	appConfig "github.com/pivaldi/go-cleanstack/internal/app/user/config"
 	"github.com/spf13/cobra"
 )
 

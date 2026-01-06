@@ -9,9 +9,9 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/gen/app1/v1/app1v1connect"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/api/handler"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/service"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1/userv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/handler"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 )
 
@@ -33,7 +33,7 @@ func (s *Server) Start() error {
 	mux := http.NewServeMux()
 
 	userHandler := handler.NewUserHandler(s.userService)
-	path, h := app1v1connect.NewUserServiceHandler(userHandler)
+	path, h := userv1connect.NewUserServiceHandler(userHandler)
 	mux.Handle(path, h)
 
 	addr := fmt.Sprintf(":%d", s.port)

@@ -8,9 +8,9 @@ import (
 
 	"github.com/pivaldi/presence"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/entity"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/domain/ports"
-	"github.com/pivaldi/go-cleanstack/internal/app/app1/infra/persistence"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/entity"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/ports"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/persistence"
 )
 
 // UserRepositoryAdapter adapts the infra repository to the domain port.

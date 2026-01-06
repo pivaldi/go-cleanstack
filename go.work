@@ -2,6 +2,6 @@ go 1.25.0
 
 use (
 	.
-	./internal/app/app1
+	./internal/app/user
 	./internal/common
 )

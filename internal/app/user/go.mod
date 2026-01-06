@@ -1,4 +1,4 @@
-module github.com/pivaldi/go-cleanstack/internal/app/app1
+module github.com/pivaldi/go-cleanstack/internal/app/user
 
 go 1.25.0
 
