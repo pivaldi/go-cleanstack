@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pivaldi/go-cleanstack/internal/app/user/adapters"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/api"
 	appConfig "github.com/pivaldi/go-cleanstack/internal/app/user/config"
-	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/persistence"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"

@@ -9,8 +9,8 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1/userv1connect"
-	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/handler"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/api/gen/user/v1/userv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/api/handler"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 )

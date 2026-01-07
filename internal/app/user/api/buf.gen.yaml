@@ -3,7 +3,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen
+      value: github.com/pivaldi/go-cleanstack/internal/app/user/api/gen
 plugins:
   - remote: buf.build/protocolbuffers/go
     out: gen

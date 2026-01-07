@@ -14,8 +14,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./config_default.toml:/config_default.toml:ro
-      - ./config_${APP_ENV}.toml:/config_${APP_ENV}.toml:ro
+      - ./configs/config_${APP_ENV}.toml:/config_${APP_ENV}.toml:ro
 
   db:
     container_name: cleanstack-db-${APP_ENV}

@@ -25,9 +25,8 @@ RUN apk add --no-cache ca-certificates tzdata
 
 COPY --from=builder /app/bin/cleanstack /usr/local/bin/cleanstack
 COPY --from=builder /app/config_development.toml /config_development.toml
-COPY --from=builder /app/config_default.toml /config_default.toml
 
 EXPOSE 4224
 
 ENTRYPOINT ["cleanstack"]
-CMD ["serve"]
+CMD ["user", "serve"]

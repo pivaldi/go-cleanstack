@@ -15,7 +15,6 @@ import (
 var (
 	appEnvName = "APP_ENV"
 	env        = os.Getenv(appEnvName)
-	cfg        *config.Config
 )
 
 func prerequisitesTest() error {
@@ -41,8 +40,8 @@ func main() {
 
 func newRootCmd() *cobra.Command {
 	var (
-		configPath = "."
-		logLevel   string
+		configDir string
+		logLevel  string
 	)
 
 	rootCmd := &cobra.Command{
@@ -51,7 +50,8 @@ func newRootCmd() *cobra.Command {
 		Long:  "A production-ready Go application with CLI and API",
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			var err error
-			cfg, err = config.Load[*config.Config](configPath)
+			cfg := &config.Config{}
+			err = config.Load(configDir, cfg)
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
@@ -74,7 +74,7 @@ func newRootCmd() *cobra.Command {
 
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "",
 		"log level (debug, info, warn, error) - overrides config file")
-	rootCmd.PersistentFlags().StringVar(&configPath, "config-path", "",
+	rootCmd.PersistentFlags().StringVar(&configDir, "config-dir", "",
 		"The path where live the configuration files config_default.toml and config_"+os.Getenv("APP_ENV")+".toml")
 
 	return rootCmd

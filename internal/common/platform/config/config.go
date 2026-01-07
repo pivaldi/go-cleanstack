@@ -1,12 +1,19 @@
 package config
 
 import (
+	"bytes"
+	_ "embed"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/pivaldi/go-cleanstack/pkg/file"
 	"github.com/spf13/viper"
 )
+
+//go:embed config_default.toml
+var defaultConfig []byte
 
 type AppEnv string
 
@@ -53,30 +60,32 @@ type logConfig struct {
 	Level string
 }
 
-func Load[T configI](configPath string) (T, error) {
-	cfg := *new(T)
+func Load[T configI](configDir string, dest T) error {
 	env := os.Getenv("APP_ENV")
 	if env == "" {
-		return cfg, errors.New("APP_ENV environment variable is not set")
+		return errors.New("APP_ENV environment variable is not set")
 	}
 
-	viper.SetConfigName("config_default")
 	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath(configPath)
-	_ = viper.ReadInConfig()
+	viper.ReadConfig(bytes.NewBuffer(defaultConfig))
 
-	viper.SetConfigName("config_" + env)
+	baseFile := "config_" + env
+	fileName := baseFile + ".toml"
+	confPath := filepath.Join(configDir, fileName)
+	if file.Exists(confPath) {
+		viper.AddConfigPath(configDir)
+		viper.SetConfigName(baseFile)
 
-	if err := viper.MergeInConfig(); err != nil {
-		return cfg, fmt.Errorf("failed to merge config file: %w", err)
+		if err := viper.MergeInConfig(); err != nil {
+			return fmt.Errorf("failed to merge config file: %w", err)
+		}
 	}
 
-	if err := viper.Unmarshal(cfg); err != nil {
-		return cfg, fmt.Errorf("failed to unmarshal config: %w", err)
+	if err := viper.Unmarshal(&dest); err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-	cfg.SetAppEnv(AppEnv(env))
+	dest.SetAppEnv(AppEnv(env))
 
-	return cfg, nil
+	return nil
 }

@@ -4,9 +4,9 @@
 
 # Environment
 .envrc
-config_development.toml
-config_staging.toml
-config_production.toml
+configs/config_development.toml
+configs/config_staging.toml
+configs/config_production.toml
 
 # IDE
 .idea/

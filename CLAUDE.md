@@ -349,21 +349,21 @@ The project uses **golangci-lint v2.7+** with strict rules:
 ## Protocol Buffers & Code Generation
 
 ### Proto Files Location
-`internal/app/app1/infra/api/proto/cleanstack/v1/item.proto`
+`internal/app/app1/api/proto/cleanstack/v1/item.proto`
 
 ### Generating Code
 ```bash
 just generate-api
 # or
-cd internal/app/app1/infra/api && buf generate
+cd internal/app/app1/api && buf generate
 ```
 
 This generates:
 - Go structs from protobuf messages
-- Connect RPC service interfaces in `internal/app/app1/infra/api/gen/`
+- Connect RPC service interfaces in `internal/app/app1/api/gen/`
 
 ### After Regenerating
-Update handlers in `internal/app/app1/infra/api/handler/` to match new service interfaces.
+Update handlers in `internal/app/app1/api/handler/` to match new service interfaces.
 
 ## Common Development Patterns
 
@@ -376,7 +376,7 @@ Update handlers in `internal/app/app1/infra/api/handler/` to match new service i
 6. Create adapter in `internal/app/app1/adapters/` (converts entity ↔ DTO)
 7. Add service in `internal/app/app1/service/` (uses port interface)
 8. Create migration in `internal/app/app1/infra/persistence/migrations/`
-9. Add API handler in `internal/app/app1/infra/api/handler/`
+9. Add API handler in `internal/app/app1/api/handler/`
 10. Update protobuf and regenerate code
 
 ### Adding a New Application Module (e.g., app2)
@@ -500,7 +500,7 @@ logger := logging.Must(logging.NewProduction("info"))
 - Migrations managed by Goose v3 (timestamp-based)
 
 ### HTTP Server Configuration
-The server in `internal/app/app1/infra/api/server.go` requires proper timeout configuration for security:
+The server in `internal/app/app1/api/server.go` requires proper timeout configuration for security:
 ```go
 httpServer := &http.Server{
     Addr:         addr,

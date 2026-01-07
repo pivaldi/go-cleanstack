@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pivaldi/go-cleanstack/internal/app/user/adapters"
-	userv1 "github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1"
-	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1/userv1connect"
-	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/handler"
+	userv1 "github.com/pivaldi/go-cleanstack/internal/app/user/api/gen/user/v1"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/api/gen/user/v1/userv1connect"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/api/handler"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/persistence"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/tests/testutil"

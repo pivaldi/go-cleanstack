@@ -6,10 +6,10 @@ import (
 
 	"connectrpc.com/connect"
 
+	userv1 "github.com/pivaldi/go-cleanstack/internal/app/user/api/gen/user/v1"
+	"github.com/pivaldi/go-cleanstack/internal/app/user/api/gen/user/v1/userv1connect"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/entity"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/domain/ports"
-	userv1 "github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1"
-	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/api/gen/user/v1/userv1connect"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
 )
 

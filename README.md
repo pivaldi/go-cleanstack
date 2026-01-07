@@ -347,7 +347,7 @@ environment:
 
 ## Code Generation
 
-Protocol Buffer definitions are in `internal/app/app1/infra/api/proto/cleanstack/v1/`. To regenerate code:
+Protocol Buffer definitions are in `internal/app/app1/api/proto/cleanstack/v1/`. To regenerate code:
 
 ```bash
 just generate-api
@@ -356,7 +356,7 @@ just generate-api
 This uses [buf](https://buf.build) to generate:
 - Go structs from protobuf messages
 - Connect RPC service interfaces and handlers
-- Generated code is output to `internal/app/app1/infra/api/gen/`
+- Generated code is output to `internal/app/app1/api/gen/`
 
 ## Linting
 
@@ -376,7 +376,7 @@ This is a template/skeleton project demonstrating architecture patterns. To use 
 1. Fork or clone the repository
 2. Update module names in `go.mod`, `go.work`, and all sub-module `go.mod` files
 3. Update `replace` directives in all `go.mod` files to match your module path
-4. Update protobuf package names in `internal/app/app1/infra/api/proto/`
+4. Update protobuf package names in `internal/app/app1/api/proto/`
 5. Implement your domain entities and business logic
 6. Add corresponding service methods and API endpoints
 7. To add a new application, create a new module under `internal/app/` (see CLAUDE.md for detailed steps)
