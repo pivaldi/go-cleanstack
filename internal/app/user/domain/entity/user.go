@@ -19,15 +19,15 @@ var (
 )
 
 type User struct {
-	ID        int64
-	Email     string
-	Password  string // hashed by PostgreSQL with pgcrypto
-	FirstName presence.Of[string]
-	LastName  presence.Of[string]
-	Role      Role
-	CreatedAt time.Time
-	UpdatedAt presence.Of[time.Time]
-	DeletedAt presence.Of[time.Time] // soft delete
+	ID        int64                  `db:"id"`
+	Email     string                 `db:"email"`
+	Password  string                 `db:"password"` // hashed by PostgreSQL with pgcrypto
+	FirstName presence.Of[string]    `db:"first_name"`
+	LastName  presence.Of[string]    `db:"last_name"`
+	Role      Role                   `db:"role"`
+	CreatedAt time.Time              `db:"created_at"`
+	UpdatedAt presence.Of[time.Time] `db:"updated_at"`
+	DeletedAt presence.Of[time.Time] `db:"deleted_at"` // soft delete
 }
 
 // NewUser creates a new User with required fields.
