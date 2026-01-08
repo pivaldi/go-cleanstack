@@ -116,6 +116,8 @@ github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJw
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
+github.com/pivaldi/go-cleanstack v0.0.0-20260107232503-340c422973ff h1:50I8jn0uORf2DhKE1L7MJ64HGuiMBhmwRg799iCg+uM=
+github.com/pivaldi/go-cleanstack v0.0.0-20260107232503-340c422973ff/go.mod h1:QdutTpG1YNLIZ11dcYA80LFMopV+5N/TyMAot4Lg8zw=
 github.com/pivaldi/presence v0.0.0-20260103184907-fcbf210df0bc h1:6WwM9z1a4WvFt8/RItVH9xCV32bz2JC+sY9VM/6dvW0=
 github.com/pivaldi/presence v0.0.0-20260103184907-fcbf210df0bc/go.mod h1:+bQl9KzPp2Tl2SVvVYoj2q7Fk9dF/g3kcCPCzGA2oOs=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

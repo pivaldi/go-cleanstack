@@ -75,7 +75,7 @@ func newRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "",
 		"log level (debug, info, warn, error) - overrides config file")
 	rootCmd.PersistentFlags().StringVar(&configDir, "config-dir", "",
-		"The path where live the configuration files config_default.toml and config_"+os.Getenv("APP_ENV")+".toml")
+		"The directory where live the configuration files config_default.toml and config_"+os.Getenv("APP_ENV")+".toml")
 
 	return rootCmd
 }

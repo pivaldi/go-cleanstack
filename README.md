@@ -13,7 +13,7 @@ This project uses **Go workspaces** (`go.work`) to manage multiple independent m
 |--------|------|---------|
 | Root | `/` | CLI orchestrator, aggregates sub-applications |
 | Common | `/internal/common` | Shared platform utilities (logging, config, errors) |
-| App1 | `/internal/app/app1` | First application with its own domain and infrastructure |
+| User | `/internal/app/user` | User management application with CRUD operations |
 
 **Benefits:**
 - Independent versioning and testing per module
@@ -40,7 +40,6 @@ This project follows Hexagonal Architecture principles with clear boundaries, or
 ```
 /                           - Root module (CLI orchestrator)
 ├── main.go                 - Entry point, aggregates sub-applications
-├── cmd/                    - Root CLI commands (migrate)
 
 /internal/common/           - Common module (shared utilities)
 ├── platform/
@@ -52,16 +51,20 @@ This project follows Hexagonal Architecture principles with clear boundaries, or
 └── transport/
     └── connectx/          - Connect RPC interceptors and error handling
 
-/internal/app/app1/         - App1 module (first application)
+/internal/app/user/         - User module (user management application)
 ├── domain/                - Pure business logic (no external dependencies)
-│   ├── entity/            - Domain entities with business rules
+│   ├── entity/            - Domain entities (User, Role) with business rules
 │   └── ports/             - Interfaces defining what domain needs
 ├── service/               - Use cases and business workflows
 ├── adapters/              - Bridges between domain and infrastructure
 ├── config/                - App-specific configuration
 ├── cmd/                   - App CLI commands (serve, version)
+├── api/                   - Connect RPC API layer
+│   ├── proto/             - Protobuf definitions
+│   ├── gen/               - Generated code
+│   ├── handler/           - Request handlers
+│   └── server.go          - HTTP server
 └── infra/                 - External concerns and frameworks
-    ├── api/               - Connect RPC handlers, protobuf, HTTP server
     └── persistence/       - Database access with DTOs and migrations
 ```
 
@@ -79,8 +82,6 @@ This project follows Hexagonal Architecture principles with clear boundaries, or
 ├── go.work                       # Go workspace definition
 ├── go.mod                        # Root module
 ├── main.go                       # Entry point (CLI orchestrator)
-├── cmd/                          # Root CLI commands
-│   └── migrate.go               # Database migration commands
 │
 ├── internal/
 │   ├── common/                   # Common module (go.mod)
@@ -94,7 +95,7 @@ This project follows Hexagonal Architecture principles with clear boundaries, or
 │   │       └── connectx/        # Connect RPC interceptors
 │   │
 │   └── app/
-│       └── app1/                 # App1 module (go.mod)
+│       └── user/                 # User module (go.mod)
 │           ├── main.go          # App entry point (standalone use)
 │           ├── cmd/             # App CLI commands
 │           │   ├── root.go      # Root command with logger init
@@ -104,29 +105,30 @@ This project follows Hexagonal Architecture principles with clear boundaries, or
 │           │   └── config.go
 │           ├── domain/          # Core business logic
 │           │   ├── entity/      # Domain entities
-│           │   │   └── item.go
+│           │   │   ├── user.go  # User entity with validation
+│           │   │   └── role.go  # Role enum with business rules
 │           │   └── ports/       # Port interfaces
 │           │       └── repository.go
 │           ├── service/         # Use cases
-│           │   └── item_service.go
+│           │   └── user_service.go
 │           ├── adapters/        # Domain-to-infra adapters
-│           │   └── item_repo_adapter.go
-│           └── infra/           # Infrastructure layer
-│               ├── api/         # Connect RPC API
-│               │   ├── proto/   # Protobuf definitions
-│               │   ├── gen/     # Generated code
-│               │   ├── handler/ # Request handlers
-│               │   └── server.go
-│               └── persistence/ # Database access
-│                   ├── db.go
-│                   ├── models.go
-│                   ├── item_repo.go
-│                   └── migrations/
-│
-├── tests/
-│   ├── integration/              # Integration tests
-│   ├── e2e/                      # End-to-end tests
-│   └── testutil/                 # Test utilities
+│           │   └── user_repo_adapter.go
+│           ├── api/             # Connect RPC API
+│           │   ├── proto/       # Protobuf definitions
+│           │   ├── gen/         # Generated code
+│           │   ├── handler/     # Request handlers
+│           │   ├── interceptor/ # Custom interceptors
+│           │   └── server.go
+│           ├── infra/           # Infrastructure layer
+│           │   └── persistence/ # Database access
+│           │       ├── db.go
+│           │       ├── models.go
+│           │       ├── user_repo.go
+│           │       └── migrations/
+│           └── tests/           # App-specific tests
+│               ├── integration/ # Integration tests
+│               ├── e2e/         # End-to-end tests
+│               └── testutil/    # Test utilities
 │
 ├── config_default.toml           # Default configuration
 ├── docker-compose.yml            # Docker orchestration
@@ -253,8 +255,9 @@ go test ./...
 ```
 
 Unit tests are co-located with the code they test:
-- `internal/app/app1/domain/entity/item_test.go` - Domain entity tests
-- `internal/app/app1/service/item_service_test.go` - Service layer tests
+- `internal/app/user/domain/entity/user_test.go` - Domain entity tests
+- `internal/app/user/domain/entity/role_test.go` - Role enum tests
+- `internal/app/user/service/user_service_test.go` - Service layer tests
 - `internal/common/platform/config/config_test.go` - Configuration tests
 
 ### Integration Tests
@@ -300,23 +303,32 @@ open coverage.html
 
 The application exposes a Connect RPC API. You can interact with it using any HTTP client or Connect-compatible client.
 
-### Example: Create an Item
+### Example: Create a User
 
 ```bash
-curl -X POST http://localhost:8080/cleanstack.v1.ItemService/CreateItem \
+curl -X POST http://localhost:4224/user.v1.UserService/CreateUser \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Example Item",
-    "description": "An example item"
+    "email": "user@example.com",
+    "password": "securepassword123",
+    "role": "ROLE_USER"
   }'
 ```
 
-### Example: List Items
+### Example: List Users
 
 ```bash
-curl -X POST http://localhost:8080/cleanstack.v1.ItemService/ListItems \
+curl -X POST http://localhost:4224/user.v1.UserService/ListUsers \
   -H "Content-Type: application/json" \
-  -d '{}'
+  -d '{"limit": 10, "offset": 0}'
+```
+
+### Example: Get User by ID
+
+```bash
+curl -X POST http://localhost:4224/user.v1.UserService/GetUser \
+  -H "Content-Type: application/json" \
+  -d '{"id": 1}'
 ```
 
 ## Docker Deployment
@@ -332,8 +344,8 @@ docker-compose up
 ```
 
 The docker-compose setup includes:
-- Application container (port 8080)
-- PostgreSQL database (port 5432)
+- Application container (port varies by APP_ENV: 4224/4225/4226)
+- PostgreSQL database (port varies by APP_ENV: 5435/5436/5437)
 - Health checks and automatic migrations
 
 ### Environment Variables
@@ -347,7 +359,7 @@ environment:
 
 ## Code Generation
 
-Protocol Buffer definitions are in `internal/app/app1/api/proto/cleanstack/v1/`. To regenerate code:
+Protocol Buffer definitions are in `internal/app/user/api/proto/user/v1/`. To regenerate code:
 
 ```bash
 just generate-api
@@ -356,7 +368,7 @@ just generate-api
 This uses [buf](https://buf.build) to generate:
 - Go structs from protobuf messages
 - Connect RPC service interfaces and handlers
-- Generated code is output to `internal/app/app1/api/gen/`
+- Generated code is output to `internal/app/user/api/gen/`
 
 ## Linting
 
@@ -376,7 +388,7 @@ This is a template/skeleton project demonstrating architecture patterns. To use 
 1. Fork or clone the repository
 2. Update module names in `go.mod`, `go.work`, and all sub-module `go.mod` files
 3. Update `replace` directives in all `go.mod` files to match your module path
-4. Update protobuf package names in `internal/app/app1/api/proto/`
+4. Update protobuf package names in `internal/app/user/api/proto/`
 5. Implement your domain entities and business logic
 6. Add corresponding service methods and API endpoints
 7. To add a new application, create a new module under `internal/app/` (see CLAUDE.md for detailed steps)
@@ -392,25 +404,28 @@ This is a template/skeleton project demonstrating architecture patterns. To use 
 
 ### The Adapter Pattern
 
-The `ItemRepositoryAdapter` demonstrates the adapter pattern:
+The `UserRepositoryAdapter` demonstrates the adapter pattern:
 
 ```go
 // Domain defines what it needs (port)
-type ItemRepository interface {
-    Create(ctx context.Context, item *entity.Item) error
+type UserRepository interface {
+    Create(ctx context.Context, user *entity.User) (*entity.User, error)
+    GetByID(ctx context.Context, id int64) (*entity.User, error)
+    List(ctx context.Context, offset, limit int) ([]*entity.User, int64, error)
 }
 
 // Infrastructure provides DTOs (no domain import)
-type ItemRepo struct {}
-func (r *ItemRepo) Create(ctx context.Context, dto *ItemDTO) error
+type UserRepo struct {}
+func (r *UserRepo) Create(ctx context.Context, dto *UserDTO) (*UserDTO, error)
 
 // Adapter bridges domain and infrastructure
-type ItemRepositoryAdapter struct {
-    infraRepo *persistence.ItemRepo
+type UserRepositoryAdapter struct {
+    infraRepo *persistence.UserRepo
 }
-func (a *ItemRepositoryAdapter) Create(ctx context.Context, item *entity.Item) error {
-    dto := &persistence.ItemDTO{...} // Convert entity to DTO
-    return a.infraRepo.Create(ctx, dto)
+func (a *UserRepositoryAdapter) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
+    dto := toDTO(user)           // Convert entity to DTO
+    result, err := a.infraRepo.Create(ctx, dto)
+    return toEntity(result), err // Convert DTO back to entity
 }
 ```
 

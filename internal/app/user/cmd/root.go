@@ -1,20 +1,18 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/pivaldi/go-cleanstack/internal/app/user/config"
-	"github.com/pivaldi/go-cleanstack/internal/common/platform/logger/zap"
-	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
+	appConfig "github.com/pivaldi/go-cleanstack/internal/app/user/config"
+	"github.com/pivaldi/go-cleanstack/internal/common/platform/config"
 	"github.com/spf13/cobra"
 )
 
 func GetRootCmd() *cobra.Command {
 	var (
-		configPath string = "."
-		logLevel   string
+		configDir string = ""
+		logLevel  string
 	)
 
 	rootCmd := &cobra.Command{
@@ -22,10 +20,12 @@ func GetRootCmd() *cobra.Command {
 		Short: "User Application",
 		Long:  "User Application",
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
-			cfg := config.Get()
+			cfg := appConfig.Get()
 			if cfg == nil {
 				var err error
-				cfg, err = config.Load(configPath)
+				cfg = &appConfig.Config{}
+
+				err = config.Load(configDir, cfg)
 				if err != nil {
 					return fmt.Errorf("failed to load config: %w", err)
 				}
@@ -35,10 +35,9 @@ func GetRootCmd() *cobra.Command {
 					cfg.Platform.Log.Level = logLevel
 				}
 
-				config.SetConfig(cfg)
 			}
 
-			setup()
+			appConfig.Setup(cfg)
 
 			return nil
 		},
@@ -46,32 +45,12 @@ func GetRootCmd() *cobra.Command {
 
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "",
 		"log level (debug, info, warn, error) - overrides config file")
-	rootCmd.PersistentFlags().StringVar(&configPath, "config-path", "",
-		"The path where live the configuration files config_default.toml and config_"+os.Getenv("APP_ENV")+".toml")
+	rootCmd.PersistentFlags().StringVar(&configDir, "config-dir", "",
+		"The directory where lives the configuration files config_default.toml and config_"+os.Getenv("APP_ENV")+".toml")
 
 	rootCmd.AddCommand(NewVersionCmd())
 	rootCmd.AddCommand(NewServeCmd())
 	// app.cmd.AddCommand(NewMigrateCmd())
 
 	return rootCmd
-}
-
-func setup() {
-	cfg := config.Get()
-	logger, err := zap.NewDevelopment(cfg.Platform.Log.Level)
-	if err != nil {
-		panic(err)
-	}
-
-	env := os.Getenv("APP_ENV")
-	if env == "" {
-		panic(errors.New("APP_ENV environment variable is not set"))
-	}
-
-	logger.Info("application starting",
-		logging.String("env", env),
-		logging.String("log_level", cfg.Platform.Log.Level),
-	)
-
-	logging.SetLogger(logger)
 }

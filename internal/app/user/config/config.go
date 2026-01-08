@@ -2,15 +2,23 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/config"
-	"github.com/spf13/viper"
+	"github.com/pivaldi/go-cleanstack/internal/common/platform/logger/zap"
+	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 )
 
 type Config struct {
 	Platform config.Platform
+}
+
+func (c *Config) SetAppEnv(appEnv config.AppEnv) {
+	if c == nil {
+		return
+	}
+
+	c.Platform.SetAppEnv(appEnv)
 }
 
 var cfg *Config
@@ -30,36 +38,28 @@ func Get() *Config {
 	return cfg
 }
 
-func Load(configPath string) (*Config, error) {
-	if cfg != nil {
-		return cfg, nil
+func Setup(cfg *Config) {
+	if cfg == nil {
+		panic(errors.New("config is not loaded. Use config.Load() to initialize"))
+	}
+
+	SetConfig(cfg)
+
+	logger, err := zap.NewDevelopment(cfg.Platform.Log.Level)
+	if err != nil {
+		panic(err)
 	}
 
 	env := os.Getenv("APP_ENV")
 	if env == "" {
-		return nil, errors.New("APP_ENV environment variable is not set")
+		panic(errors.New("APP_ENV environment variable is not set"))
 	}
 
-	viper.SetConfigName("config_default")
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath(configPath)
+	logger.Info("application starting",
+		logging.String("env", env),
+		logging.String("log_level", cfg.Platform.Log.Level),
+	)
 
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error loading default configuration : %w", err)
-	}
-
-	viper.SetConfigName("config_" + env)
-
-	if err := viper.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to merge config file: %w", err)
-	}
-
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
-	cfg.Platform.AppEnv = config.AppEnv(env)
-
-	return cfg, nil
+	// TODO: Implement setup logic in the app infrastructure not in common
+	logging.SetLogger(logger)
 }
