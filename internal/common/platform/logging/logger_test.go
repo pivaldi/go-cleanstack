@@ -1202,7 +1202,7 @@ func TestDictObject(t *testing.T) {
 	}
 
 	// Verify it implements the interface
-	//nolint:S1040 // Testing purpose
+	//lint:ignore S1040 // Test purpose
 	_, ok := om.(ObjectMarshaler)
 	if !ok {
 		t.Error("expected DictObject to implement ObjectMarshaler")

@@ -20,12 +20,14 @@ const defaultTimeout = 30 * time.Second
 type Server struct {
 	port        int
 	userService *service.UserService
+	logger      logging.Logger
 }
 
-func NewServer(port int, userService *service.UserService) *Server {
+func NewServer(port int, userService *service.UserService, logger logging.Logger) *Server {
 	return &Server{
 		port:        port,
 		userService: userService,
+		logger:      logger,
 	}
 }
 
@@ -37,7 +39,7 @@ func (s *Server) Start() error {
 	mux.Handle(path, h)
 
 	addr := fmt.Sprintf(":%d", s.port)
-	logging.GetLogger().Info("starting HTTP server", logging.String("address", addr))
+	s.logger.Info("starting HTTP server", logging.String("address", addr))
 
 	h2server := &http2.Server{
 		IdleTimeout:      defaultTimeout,

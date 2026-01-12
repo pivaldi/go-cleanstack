@@ -8,7 +8,7 @@ import (
 	appConfig "github.com/pivaldi/go-cleanstack/internal/app/user/config"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/infra/persistence"
 	"github.com/pivaldi/go-cleanstack/internal/app/user/service"
-	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
+	"github.com/pivaldi/go-cleanstack/internal/common/platform/logger/zap"
 	"github.com/spf13/cobra"
 )
 
@@ -25,13 +25,18 @@ func NewServeCmd() *cobra.Command {
 			}
 			defer db.Close()
 
-			logging.GetLogger().Info("connected to database")
+			logger, err := zap.NewLogger(string(cfg.Platform.AppEnv), cfg.Platform.Log.Level)
+			if err != nil {
+				return fmt.Errorf("failed to create logger: %w", err)
+			}
+
+			logger.Info("connected to database")
 
 			infraRepo := persistence.NewUserRepo(db)
 			userRepo := adapters.NewUserRepositoryAdapter(infraRepo)
-			userService := service.NewUserService(userRepo)
+			userService := service.NewUserService(userRepo, logger)
 
-			server := api.NewServer(cfg.Platform.Server.Port, userService)
+			server := api.NewServer(cfg.Platform.Server.Port, userService, logger)
 
 			return server.Start()
 		},

@@ -17,9 +17,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var l logging.Logger
+
 func init() {
-	// Initialize no-op logger for all tests
-	logging.SetLogger(zap.NewNop())
+	var err error
+	l, err = zap.NewDevelopment("debug")
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 // MockUserRepository is a mock implementation of ports.UserRepository.
@@ -81,7 +87,7 @@ var _ ports.UserRepository = (*MockUserRepository)(nil)
 func TestUserService_CreateUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := entity.NewUser("test@example.com", "password123", entity.RoleUser)
 		input.SetFirstName("John")
@@ -109,7 +115,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("validation error - empty email", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := entity.NewUser("", "password123", entity.RoleUser)
 
@@ -123,7 +129,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("validation error - invalid email format", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := entity.NewUser("invalid-email", "password123", entity.RoleUser)
 
@@ -137,7 +143,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("validation error - password too short", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := entity.NewUser("test@example.com", "short", entity.RoleUser)
 
@@ -151,7 +157,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := entity.NewUser("test@example.com", "password123", entity.RoleUser)
 		repoErr := errors.New("database connection failed")
@@ -170,7 +176,7 @@ func TestUserService_CreateUser(t *testing.T) {
 func TestUserService_GetUserByID(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		expected := &entity.User{
 			ID:        1,
@@ -194,7 +200,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		mockRepo.On("GetByID", mock.Anything, int64(999)).Return(nil, ports.ErrUserNotFound)
 
@@ -208,7 +214,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		repoErr := errors.New("database error")
 		mockRepo.On("GetByID", mock.Anything, int64(1)).Return(nil, repoErr)
@@ -225,7 +231,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 func TestUserService_GetUserByEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		expected := &entity.User{
 			ID:        1,
@@ -248,7 +254,7 @@ func TestUserService_GetUserByEmail(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		mockRepo.On("GetByEmail", mock.Anything, "notfound@example.com").Return(nil, ports.ErrUserNotFound)
 
@@ -264,7 +270,7 @@ func TestUserService_GetUserByEmail(t *testing.T) {
 func TestUserService_ListUsers(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		users := []*entity.User{
 			{ID: 1, Email: "user1@example.com", Role: entity.RoleUser},
@@ -283,7 +289,7 @@ func TestUserService_ListUsers(t *testing.T) {
 
 	t.Run("empty list", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		mockRepo.On("List", mock.Anything, 0, 10).Return([]*entity.User{}, int64(0), nil)
 
@@ -297,7 +303,7 @@ func TestUserService_ListUsers(t *testing.T) {
 
 	t.Run("pagination", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		users := []*entity.User{
 			{ID: 11, Email: "user11@example.com", Role: entity.RoleUser},
@@ -316,7 +322,7 @@ func TestUserService_ListUsers(t *testing.T) {
 
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		repoErr := errors.New("database error")
 		mockRepo.On("List", mock.Anything, 0, 10).Return(nil, int64(0), repoErr)
@@ -334,7 +340,7 @@ func TestUserService_ListUsers(t *testing.T) {
 func TestUserService_UpdateUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := &entity.User{
 			ID:        1,
@@ -368,7 +374,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := &entity.User{
 			ID:    999,
@@ -388,7 +394,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		input := &entity.User{
 			ID:    1,
@@ -411,7 +417,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 func TestUserService_DeleteUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		mockRepo.On("Delete", mock.Anything, int64(1)).Return(nil)
 
@@ -423,7 +429,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 
 	t.Run("user not found", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		mockRepo.On("Delete", mock.Anything, int64(999)).Return(ports.ErrUserNotFound)
 
@@ -436,7 +442,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 
 	t.Run("repository error", func(t *testing.T) {
 		mockRepo := new(MockUserRepository)
-		svc := service.NewUserService(mockRepo)
+		svc := service.NewUserService(mockRepo, l)
 
 		repoErr := errors.New("database error")
 		mockRepo.On("Delete", mock.Anything, int64(1)).Return(repoErr)

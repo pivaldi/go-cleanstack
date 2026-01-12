@@ -11,7 +11,7 @@ import (
 )
 
 // UserRepositoryAdapter adapts the infra repository to the domain port.
-// Since persistence now uses entity.User directly, this is a simple pass-through
+// Since persistence uses entity.User directly, this is a simple pass-through
 // that only translates error types.
 type UserRepositoryAdapter struct {
 	infraRepo *persistence.UserRepo

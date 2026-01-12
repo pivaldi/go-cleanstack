@@ -59,7 +59,4 @@ func Setup(cfg *Config) {
 		logging.String("env", env),
 		logging.String("log_level", cfg.Platform.Log.Level),
 	)
-
-	// TODO: Implement setup logic in the app infrastructure not in common
-	logging.SetLogger(logger)
 }

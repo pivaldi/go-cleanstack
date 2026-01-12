@@ -62,7 +62,15 @@ func (in errorHeaderInterceptor) WrapStreamingHandler(next connect.StreamingHand
 	return next
 }
 
-type loggingInterceptor struct{}
+type loggingInterceptor struct {
+	logger logging.Logger
+}
+
+func NewLoggingInterceptor(logger logging.Logger) *loggingInterceptor {
+	return &loggingInterceptor{
+		logger: logger,
+	}
+}
 
 func (in loggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -80,15 +88,13 @@ func (in loggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc
 		}
 
 		if err == nil {
-			logging.GetLogger().Info("rpc", fields...)
+			in.logger.Info("rpc", fields...)
 			return res, nil
 		}
 
 		ae := apperr.As(err)
 		if ae == nil {
-			logging.GetLogger().Error("rpc_error", append(fields,
-				logging.String("error", err.Error()),
-			)...)
+			in.logger.Error("rpc_error", append(fields, logging.String("error", err.Error()))...)
 
 			return res, err
 		}
@@ -114,7 +120,7 @@ func (in loggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc
 			fields = append(fields, logging.String("stack", ae.Stack))
 		}
 
-		logging.GetLogger().Error("rpc_error", fields...)
+		in.logger.Error("rpc_error", fields...)
 
 		return res, err
 	}

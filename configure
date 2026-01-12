@@ -140,10 +140,10 @@ fi
 # shellcheck disable=SC1091
 . ./.envrc || exit 1
 
-_doing 'Installing https://just.systems/man/en/'
+_doing 'Installing github.com/go-task/task/v3/cmd/task'
 # shellcheck disable=SC2015
-type just &>/dev/null && _doneNTD || {
-  _do "curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin"
+type task &>/dev/null && _doneNTD || {
+  _do "go install github.com/go-task/task/v3/cmd/task@latest"
   _done
 }
 

@@ -10,21 +10,20 @@ import (
 )
 
 type UserService struct {
-	repo ports.UserRepository
+	repo   ports.UserRepository
+	logger logging.Logger
 }
 
-func NewUserService(repo ports.UserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo ports.UserRepository, logger logging.Logger) *UserService {
+	return &UserService{repo: repo, logger: logger}
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
-	logger := logging.GetLogger()
-
 	if err := user.Validate(); err != nil {
 		return nil, fmt.Errorf("user validation failed: %w", err)
 	}
 
-	logger.Info("creating user", logging.String("email", user.Email))
+	s.logger.Info("creating user", logging.String("email", user.Email))
 
 	created, err := s.repo.Create(ctx, user)
 	if err != nil {
@@ -62,9 +61,7 @@ func (s *UserService) ListUsers(ctx context.Context, offset, limit int) ([]*enti
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
-	logger := logging.GetLogger()
-
-	logger.Info("updating user", logging.Int64("id", user.ID))
+	s.logger.Info("updating user", logging.Int64("id", user.ID))
 
 	updated, err := s.repo.Update(ctx, user)
 	if err != nil {
@@ -75,9 +72,7 @@ func (s *UserService) UpdateUser(ctx context.Context, user *entity.User) (*entit
 }
 
 func (s *UserService) DeleteUser(ctx context.Context, id int64) error {
-	logger := logging.GetLogger()
-
-	logger.Info("deleting user", logging.Int64("id", id))
+	s.logger.Info("deleting user", logging.Int64("id", id))
 
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return fmt.Errorf("failed to delete user from repository: %w", err)

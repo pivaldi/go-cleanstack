@@ -24,9 +24,14 @@ import (
 	"github.com/pivaldi/go-cleanstack/internal/common/platform/logging"
 )
 
+var l logging.Logger
+
 func init() {
-	// Initialize no-op logger for all tests
-	logging.SetLogger(zap.NewNop())
+	var err error
+	l, err = zap.NewDevelopment("debug")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TestUserAPI_E2E(t *testing.T) {
@@ -43,7 +48,7 @@ func TestUserAPI_E2E(t *testing.T) {
 	// Wire up dependencies
 	infraRepo := persistence.NewUserRepo(db)
 	userRepo := adapters.NewUserRepositoryAdapter(infraRepo)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, l)
 	userHandler := handler.NewUserHandler(userService)
 
 	// Create test server
