@@ -19,9 +19,9 @@ type AppEnv string
 
 type Platform struct {
 	AppEnv   AppEnv
-	Server   serverConfig
-	Database databaseConfig
-	Log      logConfig
+	Server   ServerConfig
+	Database DatabaseConfig
+	Log      LogConfig
 }
 
 func (p *Platform) SetAppEnv(appEnv AppEnv) {
@@ -48,15 +48,15 @@ type configI interface {
 	SetAppEnv(AppEnv)
 }
 
-type serverConfig struct {
+type ServerConfig struct {
 	Port int
 }
 
-type databaseConfig struct {
+type DatabaseConfig struct {
 	URL string
 }
 
-type logConfig struct {
+type LogConfig struct {
 	Level string
 }
 

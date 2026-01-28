@@ -1,0 +1,193 @@
+[settings]
+# task_output = "quiet"
+
+[hooks]
+preinstall = "echo 'Nothing to do in preinstall'"
+postinstall = [
+  "mise generate git-pre-commit --task=pre-commit --write",
+  "mise run setup",
+  "mise run doctor"
+  ]
+
+[tools]
+go = "latest"
+golangci-lint = "latest"
+buf = "latest"
+
+[env]
+# Load .env if present (mise will ignore if missing)
+_.file = '.env'
+
+APP_ENV = { required = true }
+# Keep the Go tools local to the repo
+# NOTE: Use _.path to prepend directories to PATH. Do NOT use PATH = "${GOBIN}:${PATH}"
+#       because ${PATH} is not expanded in the [env] section (to avoid circular references).
+# GOBIN = "{{cwd}}/.tools/bin"
+# GOPATH = "{{cwd}}/.tools/gopath"
+# _.path = ["{{env.GOBIN}}"]
+
+[vars]
+GOTESTSUM_OPTIONS = "--format testdox"
+
+# ----------------------------
+# Bootstrap / Update
+# ----------------------------
+
+[tasks.setup]
+description = "Bootstrap repo deps + Go tools (does NOT run mise install/upgrade)"
+depends= [ "go-tools" ]
+run = "go mod download"
+alias = "update"
+
+[tasks.go-tools]
+description = "Install/update Go developer tools (latest) into .tools/bin"
+run = "./script/go-tools.sh"
+
+# ----------------------------
+# App
+# ----------------------------
+
+[tasks.dev]
+description = "Start the server in development mode"
+run = "go run . serve"
+alias = 'd'
+
+[tasks.build]
+description = "Build the application"
+run = "go build -o bin/cleanstack ./main.go"
+alias = 'b'
+
+# ----------------------------
+# Generate
+# ----------------------------
+
+[tasks.gen-api]
+description = "API Code Generation"
+run = "cd internal/app/user/api && buf generate"
+
+[tasks.gen-go]
+description = "Go Code Generation"
+run = "go generate ./..."
+
+[tasks.gen-all]
+description = "Generate all needed codes"
+depends = ['gen-go', 'gen-api']
+alias = 'g'
+
+# ----------------------------
+# Tests
+# ----------------------------
+
+[tasks.test]
+description = "Unit tests"
+run = """
+  go tool gotestsum {{vars.GOTESTSUM_OPTIONS}} -- -v ./... ./internal/common/... ./internal/app/user/...
+  """
+alias = 't'
+
+
+[tasks.test-int]
+description = "Integration tests"
+run = """
+  go tool gotestsum {{vars.GOTESTSUM_OPTIONS}} -- -v -tags=integration ./... ./internal/common/... ./internal/app/user/...
+  """
+alias = 'ti'
+
+[tasks.test-e2e]
+description = "End-to-end tests"
+run = """
+  go tool gotestsum {{vars.GOTESTSUM_OPTIONS}} -- -v -tags=e2e ./... ./internal/common/... ./internal/app/user/...
+  """
+alias = 'te'
+
+[tasks.test-all]
+description = "All tests"
+run = """
+  go tool gotestsum {{vars.GOTESTSUM_OPTIONS}} -- -v -tags=integration,e2e ./... ./internal/common/... ./internal/app/user/...
+  """
+alias = 'ta'
+
+[tasks.test-cover]
+description = "Coverage tests"
+run = [
+  "go tool gotestsum {{vars.GOTESTSUM_OPTIONS}} -- -v -coverprofile=coverage.out ./... ./internal/common/... ./internal/app/user/...",
+  "go tool cover -html=coverage.out -o coverage.html"
+]
+
+alias = 'tc'
+
+# ----------------------------
+# Database / migrations
+# ----------------------------
+
+[tasks.migrate-up]
+description = "Migrations Up"
+run = "go run . migrate up"
+
+[tasks.migrate-down]
+description = "Migrations Down"
+run = "go run . migrate down"
+
+[tasks.migrate-create]
+description = "Migrations Create (interactive)"
+run = "go run . migrate create"
+
+[tasks.db-connect]
+description = "Connect to the Dockerized Database"
+run = 'docker exec -it cleanstack-db-${APP_ENV} psql -U user -d cleanstack_${APP_ENV}'
+
+# ----------------------------
+# Lint / Pre-commit
+# ----------------------------
+
+[tasks.pre-commit]
+description = "Pre-commit checks (can be run manually or as git hook)"
+run = "./script/pre-commit.sh"
+
+[tasks.lint]
+description = "Linting"
+run = "golangci-lint run"
+
+[tasks.lint-fix]
+description = "Linting (with fixes)"
+run = "golangci-lint run --fix"
+
+[tasks.fmt]
+description = "Format Go code (gofmt + goimports)"
+run = [
+  "gofmt -w .",
+  "goimports -w .",
+]
+
+# ----------------------------
+# Docker
+# ----------------------------
+
+[tasks.docker-up]
+description = "Start docker-compose for current APP_ENV"
+run = "./script/docker.sh"
+
+[tasks.docker-down]
+description = "Stop docker-compose"
+run = "docker-compose down"
+
+[tasks.docker-logs]
+description = "Docker logs"
+run = "docker-compose logs -f"
+
+# ----------------------------
+# Doctor
+# ----------------------------
+
+[tasks.doctor]
+description = "Show tool versions and key environment info"
+run = "./script/doctor.sh"
+alias = "dr"
+
+# ----------------------------
+# Clean
+# ----------------------------
+
+[tasks.clean]
+description = "Clean"
+run = "rm -rf bin/ coverage.out coverage.html .tools/bin .tools/gopath"

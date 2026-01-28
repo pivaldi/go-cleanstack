@@ -150,15 +150,22 @@ yourself.**
 
 ## Getting Started
 
-### 1. Install Dependencies
+### Install Dependencies
 
-Simply run this command :
+Run the command `./configure`.
 
-```bash
-./configure
+### Later
+
+``` bash
+mise upgrade
+mise run setup
 ```
 
-This command can be launch as many times as you want.
+These commands can be launch as many times as you want to update all the dev tools…
+
+### Tasks
+
+Try `mise run` for interactive choice or `mise run lint` to run the task `lint`.
 
 ### 2. Configuration
 
@@ -179,15 +186,15 @@ Or use `[direnv](https://direnv.net/)`.
 
 Using Docker:
 
-`just up` or `docker-compose up -d` or manually start PostgreSQL and update the database URL in your config file.
+`mise run docker-up` or `docker-compose up -d` or manually start PostgreSQL and update the database URL in your config file.
 
 ### 4. Run Migrations
 
-`just migrate-up` or `./bin/cleanstack migrate up` or `go run . migrate up`
+`mise run migrate-up` or `./bin/cleanstack migrate up` or `go run . migrate up`
 
 ### 5. Run the Server
 
-`just dev` or `go run . serve`
+`mise run dev` or `go run . serve`
 
 The API will be available at `http://localhost:4224`.
 
@@ -198,46 +205,46 @@ Available commands follow.
 
 ### Development
 ```bash
-just generate-api # Generate code from protobuf definitions
-just dev          # Run development server (requires APP_ENV env var)
+mise run gen-api # Generate code from protobuf definitions
+mise run dev          # Run development server (requires APP_ENV env var)
 ```
 
 ### Testing
 ```bash
-just test         # Run unit tests
-just test-int     # Run integration tests (requires Docker)
-just test-e2e     # Run end-to-end tests (requires Docker)
-just test-all     # Run all tests
-just test-cover   # Generate test coverage report
+mise run test         # Run unit tests
+mise run test-int     # Run integration tests (requires Docker)
+mise run test-e2e     # Run end-to-end tests (requires Docker)
+mise run test-all     # Run all tests
+mise run test-cover   # Generate test coverage report
 ```
 
 ### Database
 ```bash
-just migrate-up   # Run database migrations
-just migrate-down # Rollback database migrations
+mise run migrate-up   # Run database migrations
+mise run migrate-down # Rollback database migrations
 ```
 
 ### Code Quality
 ```bash
-just lint         # Run linter
-just lint-fix     # Run linter with auto-fix
+mise run lint         # Run linter
+mise run lint-fix     # Run linter with auto-fix
 ```
 
 ### Build
 ```bash
-just build        # Build binary to bin/cleanstack
+mise run build        # Build binary to bin/cleanstack
 ```
 
 ### Docker
 ```bash
-just up           # Start services with docker-compose
-just down         # Stop services
-just logs         # View service logs
+mise run up           # Start services with docker-compose
+mise run down         # Stop services
+mise run logs         # View service logs
 ```
 
 ### Cleanup
 ```bash
-just clean        # Remove build artifacts and coverage files
+mise run clean        # Remove build artifacts and coverage files
 ```
 
 ## Testing
@@ -249,7 +256,7 @@ This project implements a comprehensive test pyramid:
 Run unit tests that don't require external dependencies:
 
 ```bash
-just test
+mise run test
 # or
 go test ./...
 ```
@@ -265,7 +272,7 @@ Unit tests are co-located with the code they test:
 Run integration tests that use testcontainers for real PostgreSQL:
 
 ```bash
-just test-int
+mise run test-int
 # or
 go test -tags=integration ./tests/integration/...
 ```
@@ -280,7 +287,7 @@ Integration tests verify:
 Run end-to-end tests that test the full application stack:
 
 ```bash
-just test-e2e
+mise run test-e2e
 # or
 go test -tags=e2e ./tests/e2e/...
 ```
@@ -295,7 +302,7 @@ E2E tests verify:
 Generate a test coverage report:
 
 ```bash
-just test-cover
+mise run test-cover
 open coverage.html
 ```
 
@@ -362,7 +369,7 @@ environment:
 Protocol Buffer definitions are in `internal/app/user/api/proto/user/v1/`. To regenerate code:
 
 ```bash
-just generate-api
+mise run gen-api
 ```
 
 This uses [buf](https://buf.build) to generate:
@@ -375,8 +382,8 @@ This uses [buf](https://buf.build) to generate:
 This project uses golangci-lint with a comprehensive configuration:
 
 ```bash
-just lint        # Check for issues
-just lint-fix    # Auto-fix issues
+mise run lint        # Check for issues
+mise run lint-fix    # Auto-fix issues
 ```
 
 Pre-commit hooks are configured to run linting automatically.
