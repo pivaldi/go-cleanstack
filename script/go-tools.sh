@@ -5,6 +5,9 @@ set -euo pipefail
 
 #mkdir -p .tools/bin .tools/gopath
 
+# unclutter your .profile
+go install github.com/direnv/direnv@latest
+
 # LSP
 go install golang.org/x/tools/gopls@latest
 # golangci-lint LSP wrapper
